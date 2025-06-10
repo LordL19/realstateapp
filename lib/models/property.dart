@@ -2,12 +2,12 @@ class Property {
   final String idProperty;
   final String idUser;
   final String title;
-  final String description;
-  final String address;
+  final String? description;
+  final String? address;
   final String city;
   final String country;
-  final String propertyType;
-  final String transactionType;
+  final String? propertyType;
+  final String? transactionType;
   final String status;
   final double price;
   final int area;
@@ -21,12 +21,12 @@ class Property {
     required this.idProperty,
     required this.idUser,
     required this.title,
-    required this.description,
-    required this.address,
+    this.description,
+    this.address,
     required this.city,
     required this.country,
-    required this.propertyType,
-    required this.transactionType,
+    this.propertyType,
+    this.transactionType,
     required this.status,
     required this.price,
     required this.area,

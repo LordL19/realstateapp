@@ -3,41 +3,18 @@ import 'package:provider/provider.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../viewmodels/property_viewmodel.dart';
 import 'create_property_view.dart';
+import '../../viewmodels/profile_viewmodel.dart';
 
 class PropertyListView extends StatelessWidget {
   const PropertyListView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // Obtenemos el cliente de GraphQL aquí, fuera del callback 'create'.
-    final client = GraphQLProvider.of(context).value;
-
-    return ChangeNotifierProvider(
-      // Ahora usamos la variable 'client' que capturamos antes.
-      create: (context) => PropertyViewModel(client: client)..fetchProperties(),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Catálogo de Propiedades'),
-        ),
-        body: const PropertyList(),
-        floatingActionButton: Builder(
-          builder: (context) => FloatingActionButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) =>
-                      // Compartimos el mismo ViewModel para no tener que recargar la lista
-                      ChangeNotifierProvider.value(
-                    value: context.read<PropertyViewModel>(),
-                    child: const CreatePropertyView(),
-                  ),
-                ),
-              );
-            },
-            child: const Icon(Icons.add),
-          ),
-        ),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Catálogo de Propiedades'),
       ),
+      body: const PropertyList(),
     );
   }
 }
@@ -47,8 +24,13 @@ class PropertyList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId = context.watch<ProfileViewModel>().profile?.idUser;
     return Consumer<PropertyViewModel>(
       builder: (context, viewModel, child) {
+        List properties = viewModel.publicProperties;
+        if (currentUserId != null) {
+          properties = properties.where((p) => p.idUser != currentUserId).toList();
+        }
         switch (viewModel.state) {
           case PropertyState.loading:
             return const Center(child: CircularProgressIndicator());
@@ -67,15 +49,15 @@ class PropertyList extends StatelessWidget {
               ),
             );
           case PropertyState.loaded:
-            if (viewModel.properties.isEmpty) {
+            if (properties.isEmpty) {
               return const Center(
                 child: Text('No hay propiedades disponibles.'),
               );
             }
             return ListView.builder(
-              itemCount: viewModel.properties.length,
+              itemCount: properties.length,
               itemBuilder: (context, index) {
-                final property = viewModel.properties[index];
+                final property = properties[index];
                 return Card(
                   margin: const EdgeInsets.all(8.0),
                   child: ListTile(

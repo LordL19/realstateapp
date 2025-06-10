@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
@@ -38,13 +39,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const storage = FlutterSecureStorage();
+
+    final AuthLink authLink = AuthLink(
+      getToken: () async {
+        final token = await storage.read(key: 'jwt');
+        return token != null ? 'Bearer $token' : null;
+      },
+    );
+
     final HttpLink httpLink = HttpLink(
       ApiConfig.getGraphQLEndpoint(),
     );
 
+    // Encadenamos el link de autenticación con el link HTTP
+    final Link link = authLink.concat(httpLink);
+
     final ValueNotifier<GraphQLClient> client = ValueNotifier(
       GraphQLClient(
-        link: httpLink,
+        link: link,
         cache: GraphQLCache(store: HiveStore()),
       ),
     );

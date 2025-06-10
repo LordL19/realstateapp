@@ -26,6 +26,8 @@ dependencies:
   # UI
   cupertino_icons: ^1.0.2
   graphql_flutter: ^5.2.0
+  image_picker: ^1.1.2
+  cloudinary_public: ^0.23.1
 
 dev_dependencies:
   flutter_test:
