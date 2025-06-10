@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import 'profile_view.dart';
+import 'main_tab_view.dart';
 import 'register_view.dart';
 
 class LoginView extends StatefulWidget {
@@ -69,7 +69,7 @@ class _LoginViewState extends State<LoginView> {
         _showSnackBar("Login exitoso");
         await Future.delayed(const Duration(milliseconds: 500));
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ProfileView()),
+          MaterialPageRoute(builder: (_) => const MainTabView()),
         );
       } else {
         _showSnackBar(authVM.errorMessage ?? "Error al iniciar sesión", isError: true);

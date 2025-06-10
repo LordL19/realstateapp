@@ -3,38 +3,25 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart'; // Para detectar plataforma
+import '../config/api_config.dart';
 
 class AuthService {
   static final _client = http.Client();
   final storage = const FlutterSecureStorage();
   
-  // CONFIGURACIÓN AUTOMÁTICA SEGÚN PLATAFORMA
-  String get baseUrl {
-    if (kIsWeb) {
-      // Para Flutter Web (Edge, Chrome, etc.)
-      return "http://localhost:5000";
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      // Para emulador Android
-      return "http://10.0.2.2:5000";
-    } else {
-      // Para iOS o dispositivos físicos
-      return "http://localhost:5000";
-    }
-  }
+  final String _baseUrl = ApiConfig.getBaseUrl(Microservice.users);
   
   static const _timeout = Duration(seconds: 30);
 
   /// MÉTODO DE DEBUG PARA VERIFICAR CONECTIVIDAD
   Future<bool> testConnection() async {
     try {
-      developer.log('Probando conexión a: $baseUrl');
-      developer.log('Plataforma: ${kIsWeb ? "WEB" : "MOBILE"}');
+      developer.log('Probando conexión a: $_baseUrl');
       
       // Probar endpoint simple primero
       final response = await _client
           .get(
-            Uri.parse('$baseUrl'),
+            Uri.parse('$_baseUrl'),
             headers: {'Accept': 'application/json'},
           )
           .timeout(const Duration(seconds: 10));
@@ -51,8 +38,7 @@ class AuthService {
   Future<String?> login(String email, String password) async {
     try {
       developer.log('Intentando login para: $email');
-      developer.log('URL: $baseUrl/auth/login');
-      developer.log('Plataforma: ${kIsWeb ? "WEB (Edge/Chrome)" : "MOBILE"}');
+      developer.log('URL: $_baseUrl/auth/login');
       
       final requestBody = {
         "email": email.trim(),
@@ -63,11 +49,10 @@ class AuthService {
 
       final response = await _client
           .post(
-            Uri.parse('$baseUrl/auth/login'),
+            Uri.parse('$_baseUrl/auth/login'),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*', // Para CORS en web
             },
             body: jsonEncode(requestBody),
           )
@@ -117,8 +102,7 @@ class AuthService {
   }) async {
     try {
       developer.log('Intentando registro para: $email');
-      developer.log('URL: $baseUrl/auth/register');
-      developer.log('Plataforma: ${kIsWeb ? "WEB (Edge/Chrome)" : "MOBILE"}');
+      developer.log('URL: $_baseUrl/auth/register');
       
       final requestBody = {
         "firstName": firstName.trim(),
@@ -137,11 +121,10 @@ class AuthService {
 
       final response = await _client
           .post(
-            Uri.parse('$baseUrl/auth/register'),
+            Uri.parse('$_baseUrl/auth/register'),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*', // Para CORS en web
             },
             body: jsonEncode(requestBody),
           )
@@ -172,15 +155,14 @@ class AuthService {
       final token = await storage.read(key: 'jwt');
       if (token == null) return null;
 
-      developer.log(' Obteniendo perfil desde: $baseUrl/auth/profile');
+      developer.log(' Obteniendo perfil desde: $_baseUrl/user/profile');
 
       final response = await _client
           .get(
-            Uri.parse('$baseUrl/auth/profile'),
+            Uri.parse('$_baseUrl/user/profile'),
             headers: {
               'Authorization': 'Bearer $token',
               'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*',
             },
           )
           .timeout(_timeout);

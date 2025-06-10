@@ -2,13 +2,28 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_profile.dart';
+import '../config/api_config.dart';
 
 class ProfileService {
   static final _client = http.Client();
-  final baseUrl = "http://10.0.2.2:5000";
+  final _baseUrl = ApiConfig.getBaseUrl(Microservice.users);
   final storage = const FlutterSecureStorage();
   static const _timeout = Duration(seconds: 15);
+
+  String get baseUrl {
+    if (kIsWeb) {
+      // Para Flutter Web (Edge, Chrome, etc.)
+      return "http://localhost:5001";
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      // Para emulador Android
+      return "http://10.0.2.2:5001";
+    } else {
+      // Para iOS o dispositivos físicos
+      return "http://localhost:5001";
+    }
+  }
 
   Future<UserProfile?> getProfile() async {
     try {
@@ -17,7 +32,7 @@ class ProfileService {
 
       final response = await _client
           .get(
-            Uri.parse('$baseUrl/auth/profile'),
+            Uri.parse('$_baseUrl/user/profile'),
             headers: {
               'Authorization': 'Bearer $token',
               'Accept': 'application/json',
