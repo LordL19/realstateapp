@@ -1,167 +1,183 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/theme/theme.dart';
+import 'package:realestate_app/widgets/animations/fade_in.dart';
+import 'package:realestate_app/widgets/shared/app_text_field.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'profile_view.dart';
 import 'register_view.dart';
+import 'package:lottie/lottie.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({Key? key}) : super(key: key);
-
+  const LoginView({super.key});
   @override
-  _LoginViewState createState() => _LoginViewState();
+  State<LoginView> createState() => _LoginViewState();
 }
 
 class _LoginViewState extends State<LoginView> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _showPassword = false;
-  bool _isFormValid = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController.addListener(_validateForm);
-    _passwordController.addListener(_validateForm);
-  }
-
-  void _validateForm() {
-    final isValid = _formKey.currentState?.validate() ?? false;
-    if (_isFormValid != isValid) {
-      setState(() => _isFormValid = isValid);
-    }
-  }
+  bool _submitted = false; // ← Nuevo flag
 
   @override
   void dispose() {
-    _emailController.removeListener(_validateForm);
-    _passwordController.removeListener(_validateForm);
-    _emailController.dispose();
-    _passwordController.dispose();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
     super.dispose();
   }
 
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: isError ? Colors.red : null,
-        duration: Duration(seconds: isError ? 4 : 2),
-      ),
-    );
-  }
+  Future<void> _login() async {
+    // Marcamos que el usuario ya intentó enviar el form
+    setState(() => _submitted = true);
 
-  Future<void> _handleLogin() async {
-    final authVM = context.read<AuthViewModel>();
-    
     if (!_formKey.currentState!.validate()) return;
-
     FocusScope.of(context).unfocus();
 
-    final success = await authVM.login(
-      _emailController.text.trim(),
-      _passwordController.text.trim(),
+    final auth = context.read<AuthViewModel>();
+    final success = await auth.login(
+      _emailCtrl.text.trim(),
+      _passwordCtrl.text.trim(),
     );
 
-    if (mounted) {
-      if (success) {
-        _showSnackBar("Login exitoso");
-        await Future.delayed(const Duration(milliseconds: 500));
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const ProfileView()),
-        );
-      } else {
-        _showSnackBar(authVM.errorMessage ?? "Error al iniciar sesión", isError: true);
-      }
+    final msg =
+        success ? 'Login exitoso' : auth.errorMessage ?? 'Error inesperado';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(msg), backgroundColor: success ? null : Colors.red),
+    );
+
+    if (success && mounted) {
+      await Future.delayed(const Duration(milliseconds: 500));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileView()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Iniciar sesión"),
-        elevation: 0,
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Consumer<AuthViewModel>(
-        builder: (context, authVM, child) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    validator: (v) => _validateEmail(v),
+        builder: (_, auth, __) => SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Form(
+            key: _formKey,
+            autovalidateMode: _submitted
+                ? AutovalidateMode.always
+                : AutovalidateMode.disabled,
+            child: Column(
+              children: [
+// ─────────────────── Reemplazo del logo por Lottie + tagline ───────────────────
+                const SizedBox(height: AppSpacing.xxxl),
+                Lottie.network(
+                    'https://lottie.host/b0112925-f172-4c0c-be98-255b5ccc815b/76F3kTdmrM.json',
+                    width: 240,
+                    fit: BoxFit.contain,
+                    repeat: false),
+
+                const SizedBox(height: AppSpacing.l),
+                FadeIn(
+                  delay: const Duration(milliseconds: 400),
+                  child: Text(
+                    'HomeHunt',
+                    style: Theme.of(context)
+                        .textTheme
+                        .displayLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: "Contraseña",
-                      border: const OutlineInputBorder(),
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(_showPassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _showPassword = !_showPassword),
-                      ),
-                    ),
-                    obscureText: !_showPassword,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _handleLogin(),
-                    validator: (v) => v != null && v.length >= 6 ? null : "Mínimo 6 caracteres",
+                ),
+
+                const SizedBox(height: AppSpacing.s),
+
+                FadeIn(
+                  delay: const Duration(milliseconds: 600),
+                  child: Text(
+                    'Encuentra tu próximo hogar',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w500),
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    height: 48,
-                    child: authVM.isLoading
+                ),
+
+                const SizedBox(height: AppSpacing.xxl),
+
+// ───────────────────────────────────────────────────────────────────────────────
+
+                // Correo
+                FadeIn(
+                  delay: const Duration(milliseconds: 600),
+                  child: AppTextField(
+                    controller: _emailCtrl,
+                    label: 'Correo electrónico',
+                    icon: Icons.email_outlined,
+                    validator: (v) {
+                      if ((v ?? '').isEmpty) return 'Requerido';
+                      if (!v!.contains('@')) return 'Email inválido';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.l),
+
+                // Contraseña
+                FadeIn(
+                  delay: const Duration(milliseconds: 800),
+                  child: AppTextField(
+                    controller: _passwordCtrl,
+                    label: 'Contraseña',
+                    icon: Icons.lock_outline,
+                    obscure: !_showPassword,
+                    suffix: IconButton(
+                      icon: Icon(_showPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () =>
+                          setState(() => _showPassword = !_showPassword),
+                    ),
+                    validator: (v) =>
+                        (v?.length ?? 0) >= 6 ? null : 'Mínimo 6 caracteres',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxl),
+
+                // Botón (siempre activo)
+                FadeIn(
+                  delay: const Duration(milliseconds: 1000),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: AppSpacing.xxxl,
+                    child: auth.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
-                            onPressed: _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            child: const Text(
-                              "Iniciar sesión",
-                              style: TextStyle(fontSize: 16),
-                            ),
+                            onPressed: _login, // ← siempre habilitado
+                            child: const Text('Iniciar sesión'),
                           ),
                   ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
+                ),
+                const SizedBox(height: AppSpacing.l),
+
+                // Pie de página
+                FadeIn(
+                  delay: const Duration(milliseconds: 1200),
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.push(
+                      context,
                       MaterialPageRoute(builder: (_) => const RegisterView()),
                     ),
-                    child: const Text("¿No tienes cuenta? Regístrate aquí"),
+                    child: const Text('Registrarse'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
     );
-  }
-
-  String? _validateEmail(String? value) {
-    if (value?.isEmpty == true) return "Email requerido";
-    if (value?.contains("@") != true || value?.contains(".") != true) {
-      return "Email inválido";
-    }
-    return null;
   }
 }
