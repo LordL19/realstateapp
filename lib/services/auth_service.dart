@@ -8,21 +8,21 @@ import 'package:flutter/foundation.dart'; // Para detectar plataforma
 class AuthService {
   static final _client = http.Client();
   final storage = const FlutterSecureStorage();
-  
+
   // CONFIGURACIÓN AUTOMÁTICA SEGÚN PLATAFORMA
   String get baseUrl {
     if (kIsWeb) {
       // Para Flutter Web (Edge, Chrome, etc.)
-      return "http://localhost:5000";
+      return "http://localhost:63063";
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       // Para emulador Android
-      return "http://10.0.2.2:5000";
+      return "http://10.0.2.2:63063";
     } else {
       // Para iOS o dispositivos físicos
-      return "http://localhost:5000";
+      return "http://localhost:63063";
     }
   }
-  
+
   static const _timeout = Duration(seconds: 30);
 
   /// MÉTODO DE DEBUG PARA VERIFICAR CONECTIVIDAD
@@ -30,17 +30,17 @@ class AuthService {
     try {
       developer.log('Probando conexión a: $baseUrl');
       developer.log('Plataforma: ${kIsWeb ? "WEB" : "MOBILE"}');
-      
+
       // Probar endpoint simple primero
-      final response = await _client
-          .get(
-            Uri.parse('$baseUrl'),
-            headers: {'Accept': 'application/json'},
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await _client.get(
+        Uri.parse('$baseUrl'),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
 
       developer.log('Respuesta del servidor: ${response.statusCode}');
-      return response.statusCode == 200 || response.statusCode == 404; // 404 también indica que el servidor responde
+      return response.statusCode == 200 ||
+          response.statusCode ==
+              404; // 404 también indica que el servidor responde
     } catch (e) {
       developer.log('Error de conexión: $e');
       return false;
@@ -53,12 +53,12 @@ class AuthService {
       developer.log('Intentando login para: $email');
       developer.log('URL: $baseUrl/auth/login');
       developer.log('Plataforma: ${kIsWeb ? "WEB (Edge/Chrome)" : "MOBILE"}');
-      
+
       final requestBody = {
         "email": email.trim(),
         "password": password.trim(),
       };
-      
+
       developer.log('Enviando datos: ${jsonEncode(requestBody)}');
 
       final response = await _client
@@ -85,12 +85,13 @@ class AuthService {
           return token;
         }
       }
-      
+
       developer.log('Login fallido - Status: ${response.statusCode}');
       return null;
     } on TimeoutException {
       developer.log('Timeout en login');
-      throw Exception('Tiempo de espera agotado. ¿Está tu API corriendo en localhost:5000?');
+      throw Exception(
+          'Tiempo de espera agotado. ¿Está tu API corriendo en localhost:5000?');
     } on FormatException catch (e) {
       developer.log('Error de formato: $e');
       throw Exception('Respuesta del servidor inválida');
@@ -119,7 +120,7 @@ class AuthService {
       developer.log('Intentando registro para: $email');
       developer.log('URL: $baseUrl/auth/register');
       developer.log('Plataforma: ${kIsWeb ? "WEB (Edge/Chrome)" : "MOBILE"}');
-      
+
       final requestBody = {
         "firstName": firstName.trim(),
         "lastName": lastName.trim(),
@@ -131,7 +132,7 @@ class AuthService {
         "country": country.trim(),
         "city": city.trim(),
       };
-      
+
       developer.log('Enviando datos de registro:');
       developer.log(jsonEncode(requestBody));
 
@@ -152,14 +153,16 @@ class AuthService {
 
       final success = response.statusCode == 200 || response.statusCode == 201;
       developer.log(success ? ' Registro exitoso' : ' Registro fallido');
-      
+
       return success;
     } on TimeoutException {
       developer.log(' Timeout en registro');
-      throw Exception('Tiempo de espera agotado. ¿Está tu API C# corriendo en localhost:5000?');
+      throw Exception(
+          'Tiempo de espera agotado. ¿Está tu API C# corriendo en localhost:5000?');
     } catch (e) {
       developer.log(' Error en registro: $e');
-      if (e.toString().contains('XMLHttpRequest') || e.toString().contains('CORS')) {
+      if (e.toString().contains('XMLHttpRequest') ||
+          e.toString().contains('CORS')) {
         throw Exception('Error CORS: Debes configurar CORS en tu API C#');
       }
       throw Exception('Error al registrarse: ${e.toString()}');
@@ -174,16 +177,14 @@ class AuthService {
 
       developer.log(' Obteniendo perfil desde: $baseUrl/auth/profile');
 
-      final response = await _client
-          .get(
-            Uri.parse('$baseUrl/auth/profile'),
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-            },
-          )
-          .timeout(_timeout);
+      final response = await _client.get(
+        Uri.parse('$baseUrl/auth/profile'),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      ).timeout(_timeout);
 
       developer.log(' Respuesta perfil - Código: ${response.statusCode}');
 
