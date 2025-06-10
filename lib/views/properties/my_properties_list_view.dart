@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/property_viewmodel.dart';
-import 'create_property_view.dart';
+import 'property_form_view.dart';
+import 'property_detail_view.dart';
 
 class MyPropertiesListView extends StatelessWidget {
   const MyPropertiesListView({Key? key}) : super(key: key);
@@ -39,29 +40,45 @@ class MyPropertiesListView extends StatelessWidget {
                   final property = viewModel.myProperties[index];
                   return Card(
                     margin: const EdgeInsets.all(8.0),
-                    child: ListTile(
-                      leading: property.photos.isNotEmpty
-                          ? Image.network(property.photos.first,
-                              width: 80, fit: BoxFit.cover)
-                          : const Icon(Icons.house, size: 40),
-                      title: Text(property.title),
-                      subtitle: Text(
-                          '${property.city} - ${property.status}\n\$${property.price.toStringAsFixed(2)}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            onPressed: () {
-                              // TODO: Navegar a la pantalla de edición
-                            },
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PropertyDetailView(property: property),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () =>
-                                _showDeleteConfirmation(context, viewModel, property.idProperty),
-                          ),
-                        ],
+                        );
+                      },
+                      child: ListTile(
+                        leading: property.photos.isNotEmpty
+                            ? Image.network(property.photos.first,
+                                width: 80, fit: BoxFit.cover)
+                            : const Icon(Icons.house, size: 40),
+                        title: Text(property.title),
+                        subtitle: Text(
+                            '${property.city} - ${property.status}\n\$${property.price.toStringAsFixed(2)}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => ChangeNotifierProvider.value(
+                                      value: viewModel,
+                                      child: PropertyFormView(property: property),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () =>
+                                  _showDeleteConfirmation(context, viewModel, property.idProperty),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
@@ -79,7 +96,7 @@ class MyPropertiesListView extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
                 value: viewModel,
-                child: const CreatePropertyView(),
+                child: const PropertyFormView(),
               ),
             ),
           );

@@ -1,3 +1,5 @@
+import 'create_property_input.dart';
+
 class Property {
   final String idProperty;
   final String idUser;
@@ -56,6 +58,50 @@ class Property {
       photos: List<String>.from(json['photos']),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+    );
+  }
+
+  Property copyWith(CreatePropertyInput input) {
+    return Property(
+      idProperty: idProperty,
+      idUser: idUser,
+      title: input.title,
+      description: input.description,
+      address: input.address,
+      city: input.city,
+      country: input.country,
+      propertyType: input.propertyType,
+      transactionType: input.transactionType,
+      status: status,
+      price: input.price,
+      area: input.area,
+      builtArea: input.builtArea,
+      bedrooms: input.bedrooms,
+      photos: input.photos,
+      createdAt: createdAt,
+      updatedAt: DateTime.now(),
+    );
+  }
+
+  Property mergeWith(Property other) {
+    return Property(
+      idProperty: idProperty,
+      idUser: idUser,
+      title: other.title,
+      description: description ?? other.description,
+      address: address ?? other.address,
+      city: other.city,
+      country: other.country,
+      propertyType: propertyType ?? other.propertyType,
+      transactionType: transactionType ?? other.transactionType,
+      status: other.status,
+      price: other.price,
+      area: other.area,
+      builtArea: other.builtArea,
+      bedrooms: other.bedrooms,
+      photos: other.photos,
+      createdAt: createdAt,
+      updatedAt: other.updatedAt,
     );
   }
 } 

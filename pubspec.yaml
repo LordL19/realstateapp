@@ -28,6 +28,8 @@ dependencies:
   graphql_flutter: ^5.2.0
   image_picker: ^1.1.2
   cloudinary_public: ^0.23.1
+  carousel_slider: ^5.1.1
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

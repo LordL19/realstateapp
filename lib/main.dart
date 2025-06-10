@@ -13,7 +13,7 @@ void main() async {
   
   // Inicializar Hive para el cache de GraphQL
   await initHiveForFlutter();
-
+  
   // Configurar HTTP client globalmente
   HttpOverrides.global = MyHttpOverrides();
   
@@ -65,18 +65,18 @@ class MyApp extends StatelessWidget {
     return GraphQLProvider(
       client: client,
       child: MultiProvider(
-        providers: [
-          ChangeNotifierProvider(create: (_) => AuthViewModel()),
-          ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-        ],
-        child: MaterialApp(
-          title: 'RealEstate App',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-          ),
-          home: const LoginView(),
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+      ],
+      child: MaterialApp(
+        title: 'RealEstate App',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const LoginView(),
         ),
       ),
     );

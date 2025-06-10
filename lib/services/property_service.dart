@@ -137,4 +137,22 @@ class PropertyService {
     }
     return result.data?['deleteProperty'] ?? false;
   }
+
+  Future<bool> updateProperty(String id, CreatePropertyInput input) async {
+    const String mutation = r'''
+      mutation UpdateProperty($id: UUID!, $input: UpdatePropertyInput!) {
+        updateProperty(id: $id, input: $input)
+      }
+    ''';
+    final options = MutationOptions(
+      document: gql(mutation),
+      variables: {
+        'id': id,
+        'input': input.toJson(),
+      },
+    );
+    final result = await client.mutate(options);
+    if (result.hasException) throw Exception(result.exception.toString());
+    return result.data?['updateProperty'] ?? false;
+  }
 } 
