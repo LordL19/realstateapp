@@ -4,71 +4,89 @@ import '../../models/property.dart';
 import '../../viewmodels/favorite_viewmodel.dart';
 import '../../viewmodels/property_viewmodel.dart';
 import 'property_detail_view.dart';
+import '../../widgets/property_filter_header.dart';
 
 class FavoriteListView extends StatelessWidget {
   const FavoriteListView({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final favoriteVM = Provider.of<FavoriteViewModel>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Favoritos'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => favoriteVM.fetchFavorites(),
+            onPressed: () {
+              context.read<FavoriteViewModel>().fetchFavorites();
+              context.read<PropertyViewModel>().fetchProperties();
+            },
           ),
         ],
       ),
       body: Consumer2<PropertyViewModel, FavoriteViewModel>(
         builder: (context, propertyVM, favoriteVM, child) {
-          if (favoriteVM.state == FavoriteState.loading ||
-              propertyVM.state == PropertyState.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (favoriteVM.state == FavoriteState.error) {
-            return Center(child: Text('Error: ${favoriteVM.errorMessage}'));
-          }
-
-          final List<Property> favoriteProperties = propertyVM.properties
+          final favoriteBaseList = propertyVM.properties
               .where((p) => favoriteVM.favoriteIds.contains(p.idProperty))
               .toList();
 
-          if (favoriteProperties.isEmpty) {
-            return const Center(child: Text('No tienes propiedades favoritas.'));
-          }
+          final filteredProperties = propertyVM.applyFilters(favoriteBaseList);
 
-          return ListView.builder(
-            itemCount: favoriteProperties.length,
-            itemBuilder: (context, index) {
-              final property = favoriteProperties[index];
-              return Card(
-                margin: const EdgeInsets.all(8.0),
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                child: InkWell(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => PropertyDetailView(property: property),
-                      ),
+          return Column(
+            children: [
+              const PropertyFilterHeader(),
+              Expanded(
+                child: Builder(
+                  builder: (context) {
+                    if (favoriteVM.state == FavoriteState.loading ||
+                        propertyVM.state == PropertyState.loading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (favoriteVM.state == FavoriteState.error) {
+                      return Center(
+                          child: Text('Error: ${favoriteVM.errorMessage}'));
+                    }
+                    if (filteredProperties.isEmpty) {
+                      return const Center(
+                          child: Text('No tienes favoritos que coincidan con los filtros.'));
+                    }
+
+                    return ListView.builder(
+                      itemCount: filteredProperties.length,
+                      itemBuilder: (context, index) {
+                        final property = filteredProperties[index];
+                        return Card(
+                          margin: const EdgeInsets.all(8.0),
+                          clipBehavior: Clip.antiAlias,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10)),
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      PropertyDetailView(property: property),
+                                ),
+                              );
+                            },
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildPropertyImage(context, property),
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: _buildPropertyInfo(property),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildPropertyImage(context, property),
-                      Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: _buildPropertyInfo(property),
-                      ),
-                    ],
-                  ),
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),
