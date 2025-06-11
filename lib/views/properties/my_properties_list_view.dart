@@ -44,7 +44,10 @@ class MyPropertiesListView extends StatelessWidget {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => PropertyDetailView(property: property),
+                            builder: (context) => PropertyDetailView(
+                              property: property,
+                              isOwner: true,
+                            ),
                           ),
                         );
                       },
@@ -64,9 +67,11 @@ class MyPropertiesListView extends StatelessWidget {
                               onPressed: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (_) => ChangeNotifierProvider.value(
+                                    builder: (_) =>
+                                        ChangeNotifierProvider.value(
                                       value: viewModel,
-                                      child: PropertyFormView(property: property),
+                                      child:
+                                          PropertyFormView(property: property),
                                     ),
                                   ),
                                 );
@@ -74,8 +79,8 @@ class MyPropertiesListView extends StatelessWidget {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () =>
-                                  _showDeleteConfirmation(context, viewModel, property.idProperty),
+                              onPressed: () => _showDeleteConfirmation(
+                                  context, viewModel, property.idProperty),
                             ),
                           ],
                         ),
@@ -106,13 +111,15 @@ class MyPropertiesListView extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, PropertyViewModel viewModel, String propertyId) {
+  void _showDeleteConfirmation(
+      BuildContext context, PropertyViewModel viewModel, String propertyId) {
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que quieres eliminar esta propiedad? Esta acción no se puede deshacer.'),
+          content: const Text(
+              '¿Estás seguro de que quieres eliminar esta propiedad? Esta acción no se puede deshacer.'),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -123,11 +130,12 @@ class MyPropertiesListView extends StatelessWidget {
                 Navigator.of(ctx).pop();
                 await viewModel.deleteProperty(propertyId);
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
   }
-} 
+}

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:realestate_app/views/visits/property_visits_view.dart';
 import 'package:realestate_app/views/visits/visit_booking_view.dart';
 import '../../models/property.dart';
 import 'package:intl/intl.dart';
 
 class PropertyDetailView extends StatelessWidget {
   final Property property;
+  final bool isOwner;
 
-  const PropertyDetailView({Key? key, required this.property})
-      : super(key: key);
+  const PropertyDetailView(
+      {super.key, required this.property, required this.isOwner});
 
   @override
   Widget build(BuildContext context) {
@@ -92,28 +94,44 @@ class PropertyDetailView extends StatelessWidget {
                   const SizedBox(height: 16),
                   _buildInfoRow(context, Icons.info_outline,
                       'Estado: ${property.status}'),
-                  ElevatedButton.icon(
-                    onPressed: () {
+                  ListTile(
+                    leading: const Icon(Icons.visibility),
+                    title: const Text("Visitas solicitadas"),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => VisitBookingView(
-                            propertyId: property.idProperty,
-                            ownerId: property.idUser,
-                          ),
-                        ),
+                            builder: (_) => PropertyVisitsView(
+                                  propertyId: property.idProperty,
+                                  propertyTitle: property.title,
+                                )),
                       );
                     },
-                    icon: const Icon(Icons.calendar_today),
-                    label: const Text('Agendar visita'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      textStyle: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: Colors.white),
-                    ),
                   ),
+                  if (!isOwner)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => VisitBookingView(
+                              propertyId: property.idProperty,
+                              ownerId: property.idUser,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(Icons.calendar_today),
+                      label: const Text('Agendar visita'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        textStyle: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(color: Colors.white),
+                      ),
+                    ),
                 ],
               ),
             ),

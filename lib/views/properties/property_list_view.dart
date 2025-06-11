@@ -18,7 +18,8 @@ class PropertyListView extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<PropertyViewModel>().fetchProperties(),
+            onPressed: () =>
+                context.read<PropertyViewModel>().fetchProperties(),
           ),
         ],
       ),
@@ -31,7 +32,8 @@ class PropertyListView extends StatelessWidget {
               return Center(child: Text('Error: ${viewModel.errorMessage}'));
             case PropertyState.loaded:
               if (viewModel.publicProperties.isEmpty) {
-                return const Center(child: Text('No hay propiedades disponibles.'));
+                return const Center(
+                    child: Text('No hay propiedades disponibles.'));
               }
               return ListView.builder(
                 itemCount: viewModel.publicProperties.length,
@@ -40,12 +42,16 @@ class PropertyListView extends StatelessWidget {
                   return Card(
                     margin: const EdgeInsets.all(8.0),
                     clipBehavior: Clip.antiAlias,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                     child: InkWell(
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (context) => PropertyDetailView(property: property),
+                            builder: (context) => PropertyDetailView(
+                              property: property,
+                              isOwner: false,
+                            ),
                           ),
                         );
                       },
@@ -80,10 +86,13 @@ class PropertyListView extends StatelessWidget {
               property.photos.first,
               fit: BoxFit.cover,
               loadingBuilder: (context, child, progress) {
-                return progress == null ? child : const Center(child: CircularProgressIndicator());
+                return progress == null
+                    ? child
+                    : const Center(child: CircularProgressIndicator());
               },
               errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.broken_image, size: 40, color: Colors.grey);
+                return const Icon(Icons.broken_image,
+                    size: 40, color: Colors.grey);
               },
             )
           : Container(
@@ -120,4 +129,4 @@ class PropertyListView extends StatelessWidget {
       ],
     );
   }
-} 
+}
