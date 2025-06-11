@@ -6,7 +6,7 @@ import '../models/user_profile.dart';
 
 class ProfileService {
   static final _client = http.Client();
-  final baseUrl = "http://10.0.2.2:63063";
+  final baseUrl = "http://192.168.100.43:63063"; //Cambiar ip de ser necesario
   final storage = const FlutterSecureStorage();
   static const _timeout = Duration(seconds: 15);
 
@@ -16,7 +16,7 @@ class ProfileService {
       if (token == null) return null;
 
       final response = await _client.get(
-        Uri.parse('$baseUrl/auth/profile'),
+        Uri.parse('$baseUrl/user/profile'), // ENDPOINTMODIFICADO
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',

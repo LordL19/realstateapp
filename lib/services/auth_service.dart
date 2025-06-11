@@ -4,24 +4,23 @@ import 'dart:developer' as developer;
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart'; // Para detectar plataforma
-
+import 'dart:io' show Platform;
 class AuthService {
   static final _client = http.Client();
   final storage = const FlutterSecureStorage();
 
   // CONFIGURACIÓN AUTOMÁTICA SEGÚN PLATAFORMA
-  String get baseUrl {
-    if (kIsWeb) {
-      // Para Flutter Web (Edge, Chrome, etc.)
-      return "http://localhost:63063";
-    } else if (defaultTargetPlatform == TargetPlatform.android) {
-      // Para emulador Android
-      return "http://10.0.2.2:63063";
-    } else {
-      // Para iOS o dispositivos físicos
-      return "http://localhost:63063";
-    }
+String get baseUrl {
+  if (kIsWeb) {
+    return "http://localhost:63063";
+  } else if (Platform.isAndroid) {
+    // Cambiar a IP de tu PC real si estás usando DISPOSITIVO físico
+    return "http://192.168.100.43:63063"; // <-- CAMBIA ESTA IP si tu red ha cambiado
+  } else {
+    return "http://localhost:63063"; // para iOS simulador o Windows
   }
+}
+
 
   static const _timeout = Duration(seconds: 30);
 

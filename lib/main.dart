@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
-import 'viewmodels/auth_viewmodel.dart';
-import 'views/login_view.dart';
+import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
+import 'package:realestate_app/views/splash_decision_view.dart'; // NUEVA VISTA
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  // Por defecto sigue el tema del sistema; podrías exponer un switch más adelante
   final ThemeMode _themeMode = ThemeMode.system;
 
   @override
@@ -53,7 +52,7 @@ class _MyAppState extends State<MyApp> {
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
         themeMode: _themeMode,
-        home: const LoginView(),
+        home: const SplashDecisionView(), // ← Cambiado aquí
       ),
     );
   }
