@@ -25,7 +25,6 @@ class _VisitBookingViewState extends State<VisitBookingView> {
   DateTime? selectedDate;
   String? selectedHour;
 
-  bool _isSubmitting = false;
 
   final List<String> hours = List.generate(10, (index) {
     final hour = index + 9;
