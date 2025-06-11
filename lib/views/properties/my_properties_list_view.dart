@@ -23,89 +23,74 @@ class MyPropertiesListView extends StatelessWidget {
       ),
       body: Consumer<PropertyViewModel>(
         builder: (context, viewModel, child) {
-          final filteredProperties = viewModel.applyFilters(viewModel.myProperties);
-
-          return Column(
-            children: [
-              const PropertyFilterHeader(),
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    switch (viewModel.myPropertiesState) {
-                      case PropertyState.loading:
-                        return const Center(child: CircularProgressIndicator());
-                      case PropertyState.error:
-                        return Center(child: Text('Error: ${viewModel.errorMessage}'));
-                      case PropertyState.loaded:
-                        if (filteredProperties.isEmpty) {
-                          return const Center(
-                            child: Text(
-                                'No tienes propiedades que coincidan con los filtros.'),
-                          );
-                        }
-                        return ListView.builder(
-                          itemCount: filteredProperties.length,
-                          itemBuilder: (context, index) {
-                            final property = filteredProperties[index];
-                            return Card(
-                              margin: const EdgeInsets.all(8.0),
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          PropertyDetailView(property: property),
-                                    ),
-                                  );
-                                },
-                                child: ListTile(
-                                  leading: property.photos.isNotEmpty
-                                      ? Image.network(property.photos.first,
-                                          width: 80, fit: BoxFit.cover)
-                                      : const Icon(Icons.house, size: 40),
-                                  title: Text(property.title),
-                                  subtitle: Text(
-                                      '${property.city} - ${property.status}\n\$${property.price.toStringAsFixed(0)}'),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
-                                        onPressed: () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  ChangeNotifierProvider.value(
-                                                value: viewModel,
-                                                child: PropertyFormView(
-                                                    property: property),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            color: Colors.red),
-                                        onPressed: () =>
-                                            _showDeleteConfirmation(context,
-                                                viewModel, property.idProperty),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+          switch (viewModel.myPropertiesState) {
+            case PropertyState.loading:
+              return const Center(child: CircularProgressIndicator());
+            case PropertyState.error:
+              return Center(child: Text('Error: ${viewModel.errorMessage}'));
+            case PropertyState.loaded:
+              if (viewModel.myProperties.isEmpty) {
+                return const Center(
+                    child: Text('Aún no has creado ninguna propiedad.'));
+              }
+              return ListView.builder(
+                itemCount: viewModel.myProperties.length,
+                itemBuilder: (context, index) {
+                  final property = viewModel.myProperties[index];
+                  return Card(
+                    margin: const EdgeInsets.all(8.0),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => PropertyDetailView(
+                              property: property,
+                              isOwner: true,
+                            ),
+                          ),
                         );
-                      default:
-                        return const Center(child: Text('Iniciando...'));
-                    }
-                  },
-                ),
-              ),
-            ],
-          );
+                      },
+                      child: ListTile(
+                        leading: property.photos.isNotEmpty
+                            ? Image.network(property.photos.first,
+                                width: 80, fit: BoxFit.cover)
+                            : const Icon(Icons.house, size: 40),
+                        title: Text(property.title),
+                        subtitle: Text(
+                            '${property.city} - ${property.status}\n\$${property.price.toStringAsFixed(2)}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        ChangeNotifierProvider.value(
+                                      value: viewModel,
+                                      child:
+                                          PropertyFormView(property: property),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _showDeleteConfirmation(
+                                  context, viewModel, property.idProperty),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              );
+            default:
+              return const Center(child: Text('Iniciando...'));
+          }
         },
       ),
       floatingActionButton: FloatingActionButton(
@@ -132,7 +117,8 @@ class MyPropertiesListView extends StatelessWidget {
       builder: (BuildContext ctx) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que quieres eliminar esta propiedad? Esta acción no se puede deshacer.'),
+          content: const Text(
+              '¿Estás seguro de que quieres eliminar esta propiedad? Esta acción no se puede deshacer.'),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
@@ -143,11 +129,12 @@ class MyPropertiesListView extends StatelessWidget {
                 Navigator.of(ctx).pop();
                 await viewModel.deleteProperty(propertyId);
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
       },
     );
   }
-} 
+}

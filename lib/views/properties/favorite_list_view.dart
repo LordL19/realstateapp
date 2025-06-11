@@ -48,7 +48,8 @@ class FavoriteListView extends StatelessWidget {
                     }
                     if (filteredProperties.isEmpty) {
                       return const Center(
-                          child: Text('No tienes favoritos que coincidan con los filtros.'));
+                          child: Text(
+                              'No tienes favoritos que coincidan con los filtros.'));
                     }
 
                     return ListView.builder(
@@ -64,8 +65,10 @@ class FavoriteListView extends StatelessWidget {
                             onTap: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      PropertyDetailView(property: property),
+                                  builder: (context) => PropertyDetailView(
+                                    property: property,
+                                    isOwner: false,
+                                  ),
                                 ),
                               );
                             },
@@ -117,8 +120,7 @@ class FavoriteListView extends StatelessWidget {
                 )
               : Container(
                   color: Colors.grey[200],
-                  child:
-                      const Icon(Icons.house, size: 80, color: Colors.grey),
+                  child: const Icon(Icons.house, size: 80, color: Colors.grey),
                 ),
         ),
         Positioned(
@@ -163,4 +165,4 @@ class FavoriteListView extends StatelessWidget {
       ],
     );
   }
-} 
+}

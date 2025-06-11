@@ -29,7 +29,8 @@ class PropertyListView extends StatelessWidget {
       ),
       body: Consumer<PropertyViewModel>(
         builder: (context, viewModel, child) {
-          final filteredProperties = viewModel.applyFilters(viewModel.publicProperties);
+          final filteredProperties =
+              viewModel.applyFilters(viewModel.publicProperties);
 
           return Column(
             children: [
@@ -41,11 +42,13 @@ class PropertyListView extends StatelessWidget {
                       case PropertyState.loading:
                         return const Center(child: CircularProgressIndicator());
                       case PropertyState.error:
-                        return Center(child: Text('Error: ${viewModel.errorMessage}'));
+                        return Center(
+                            child: Text('Error: ${viewModel.errorMessage}'));
                       case PropertyState.loaded:
                         if (filteredProperties.isEmpty) {
                           return const Center(
-                              child: Text('No hay propiedades que coincidan con los filtros.'));
+                              child: Text(
+                                  'No hay propiedades que coincidan con los filtros.'));
                         }
                         return ListView.builder(
                           itemCount: filteredProperties.length,
@@ -53,7 +56,8 @@ class PropertyListView extends StatelessWidget {
                             final property = filteredProperties[index];
                             return Consumer<FavoriteViewModel>(
                               builder: (context, favoriteVM, child) {
-                                final isFavorite = favoriteVM.isFavorite(property.idProperty);
+                                final isFavorite =
+                                    favoriteVM.isFavorite(property.idProperty);
                                 return Card(
                                   margin: const EdgeInsets.all(8.0),
                                   clipBehavior: Clip.antiAlias,
@@ -64,18 +68,22 @@ class PropertyListView extends StatelessWidget {
                                       Navigator.of(context).push(
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              PropertyDetailView(property: property),
+                                              PropertyDetailView(
+                                            property: property,
+                                            isOwner: false,
+                                          ),
                                         ),
                                       );
                                     },
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         _buildPropertyImageWithFavorite(
                                             property,
                                             isFavorite,
-                                            () => favoriteVM
-                                                .toggleFavorite(property.idProperty)),
+                                            () => favoriteVM.toggleFavorite(
+                                                property.idProperty)),
                                         Padding(
                                           padding: const EdgeInsets.all(12.0),
                                           child: _buildPropertyInfo(property),
@@ -101,7 +109,8 @@ class PropertyListView extends StatelessWidget {
     );
   }
 
-  Widget _buildPropertyImageWithFavorite(Property property, bool isFavorite, VoidCallback onToggle) {
+  Widget _buildPropertyImageWithFavorite(
+      Property property, bool isFavorite, VoidCallback onToggle) {
     return Stack(
       children: [
         SizedBox(
@@ -112,10 +121,13 @@ class PropertyListView extends StatelessWidget {
                   property.photos.first,
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, progress) {
-                    return progress == null ? child : const Center(child: CircularProgressIndicator());
+                    return progress == null
+                        ? child
+                        : const Center(child: CircularProgressIndicator());
                   },
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(Icons.broken_image, size: 40, color: Colors.grey);
+                    return const Icon(Icons.broken_image,
+                        size: 40, color: Colors.grey);
                   },
                 )
               : Container(
@@ -165,4 +177,4 @@ class PropertyListView extends StatelessWidget {
       ],
     );
   }
-} 
+}
