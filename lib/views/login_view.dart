@@ -4,7 +4,7 @@ import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/widgets/animations/fade_in.dart';
 import 'package:realestate_app/widgets/shared/app_text_field.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import 'profile_view.dart';
+import 'main_tab_view.dart';
 import 'register_view.dart';
 import 'package:lottie/lottie.dart';
 
@@ -19,7 +19,7 @@ class _LoginViewState extends State<LoginView> {
   final _passwordCtrl = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _showPassword = false;
-  bool _submitted = false; // ← Nuevo flag
+  bool _submitted = false;
 
   @override
   void dispose() {
@@ -29,7 +29,6 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Future<void> _login() async {
-    // Marcamos que el usuario ya intentó enviar el form
     setState(() => _submitted = true);
 
     if (!_formKey.currentState!.validate()) return;
@@ -41,24 +40,25 @@ class _LoginViewState extends State<LoginView> {
       _passwordCtrl.text.trim(),
     );
 
-    final msg =
-        success ? 'Login exitoso' : auth.errorMessage ?? 'Error inesperado';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(msg), backgroundColor: success ? null : Colors.red),
-    );
+    final msg = success ? 'Login exitoso' : auth.errorMessage ?? 'Error inesperado';
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(msg), backgroundColor: success ? null : Colors.red),
+      );
+    }
 
     if (success && mounted) {
       await Future.delayed(const Duration(milliseconds: 500));
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ProfileView()),
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainTabView()),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Consumer<AuthViewModel>(
@@ -71,14 +71,12 @@ class _LoginViewState extends State<LoginView> {
                 : AutovalidateMode.disabled,
             child: Column(
               children: [
-// ─────────────────── Reemplazo del logo por Lottie + tagline ───────────────────
                 const SizedBox(height: AppSpacing.xxxl),
                 Lottie.network(
                     'https://lottie.host/b0112925-f172-4c0c-be98-255b5ccc815b/76F3kTdmrM.json',
                     width: 240,
                     fit: BoxFit.contain,
                     repeat: false),
-
                 const SizedBox(height: AppSpacing.l),
                 FadeIn(
                   delay: const Duration(milliseconds: 400),
@@ -90,9 +88,7 @@ class _LoginViewState extends State<LoginView> {
                         ?.copyWith(fontWeight: FontWeight.w900),
                   ),
                 ),
-
                 const SizedBox(height: AppSpacing.s),
-
                 FadeIn(
                   delay: const Duration(milliseconds: 600),
                   child: Text(
@@ -104,12 +100,7 @@ class _LoginViewState extends State<LoginView> {
                         ?.copyWith(fontWeight: FontWeight.w500),
                   ),
                 ),
-
                 const SizedBox(height: AppSpacing.xxl),
-
-// ───────────────────────────────────────────────────────────────────────────────
-
-                // Correo
                 FadeIn(
                   delay: const Duration(milliseconds: 600),
                   child: AppTextField(
@@ -124,8 +115,6 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.l),
-
-                // Contraseña
                 FadeIn(
                   delay: const Duration(milliseconds: 800),
                   child: AppTextField(
@@ -145,8 +134,6 @@ class _LoginViewState extends State<LoginView> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xxl),
-
-                // Botón (siempre activo)
                 FadeIn(
                   delay: const Duration(milliseconds: 1000),
                   child: SizedBox(
@@ -155,14 +142,12 @@ class _LoginViewState extends State<LoginView> {
                     child: auth.isLoading
                         ? const Center(child: CircularProgressIndicator())
                         : ElevatedButton(
-                            onPressed: _login, // ← siempre habilitado
+                            onPressed: _login,
                             child: const Text('Iniciar sesión'),
                           ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.l),
-
-                // Pie de página
                 FadeIn(
                   delay: const Duration(milliseconds: 1200),
                   child: OutlinedButton(

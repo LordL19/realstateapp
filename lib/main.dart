@@ -1,14 +1,19 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/config/api_config.dart';
 import 'package:realestate_app/theme/theme.dart';
-import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
 import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
-import 'package:realestate_app/views/splash_decision_view.dart'; // NUEVA VISTA
+import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
+import 'package:realestate_app/views/splash_decision_view.dart';
 
-void main() {
+void main() async {
+  // Asegura que los bindings de Flutter estén inicializados
   WidgetsFlutterBinding.ensureInitialized();
-
+  await initHiveForFlutter();
+  
   // Configurar HTTP client globalmente
   HttpOverrides.global = MyHttpOverrides();
 
@@ -41,18 +46,43 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-      ],
-      child: MaterialApp(
-        title: 'RealEstate App',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light,
-        darkTheme: AppTheme.dark,
-        themeMode: _themeMode,
-        home: const SplashDecisionView(), // ← Cambiado aquí
+    const storage = FlutterSecureStorage();
+
+    final AuthLink authLink = AuthLink(
+      getToken: () async {
+        final token = await storage.read(key: 'jwt');
+        return token != null ? 'Bearer $token' : null;
+      },
+    );
+
+    final HttpLink httpLink = HttpLink(
+      ApiConfig.getGraphQLEndpoint(),
+    );
+
+    final Link link = authLink.concat(httpLink);
+
+    final ValueNotifier<GraphQLClient> client = ValueNotifier(
+      GraphQLClient(
+        link: link,
+        cache: GraphQLCache(store: HiveStore()),
+      ),
+    );
+
+    return GraphQLProvider(
+      client: client,
+      child: MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ],
+        child: MaterialApp(
+          title: 'RealEstate App',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: _themeMode,
+          home: const SplashDecisionView(), 
+        ),
       ),
     );
   }
