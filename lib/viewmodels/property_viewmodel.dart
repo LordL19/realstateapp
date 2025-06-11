@@ -137,16 +137,8 @@ class PropertyViewModel extends ChangeNotifier {
     try {
       final success = await _propertyService.updateProperty(id, input);
       if (success) {
-        // Update in both lists
-        final myIndex = _myProperties.indexWhere((p) => p.idProperty == id);
-        if (myIndex != -1) {
-          _myProperties[myIndex] = _myProperties[myIndex].copyWith(input);
-        }
-        
-        final allIndex = _properties.indexWhere((p) => p.idProperty == id);
-        if (allIndex != -1) {
-          _properties[allIndex] = _properties[allIndex].copyWith(input);
-        }
+        // After successful update, reload properties from server to get fresh data
+        await fetchProperties();
       }
       _formState = success ? PropertyFormStatus.success : PropertyFormStatus.error;
       notifyListeners();

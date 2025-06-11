@@ -43,4 +43,22 @@ class CreatePropertyInput {
       'photos': photos,
     };
   }
+  
+  // Method specifically for update operations
+  Map<String, dynamic> toUpdateJson() {
+    return {
+      'title': title,
+      'description': description,
+      'address': address,
+      'city': city,
+      'country': country,
+      'propertyType': propertyType,
+      'transactionType': transactionType,
+      'price': price,
+      'area': area,
+      'builtArea': builtArea,
+      'bedrooms': bedrooms,
+      'photos': photos,
+    };
+  }
 } 

@@ -35,6 +35,7 @@ class PropertyService {
 
     final QueryOptions options = QueryOptions(
       document: gql(getPropertiesQuery),
+      fetchPolicy: FetchPolicy.networkOnly, // Always get fresh data from server
     );
 
     final QueryResult result = await client.query(options);
@@ -148,7 +149,7 @@ class PropertyService {
       document: gql(mutation),
       variables: {
         'id': id,
-        'input': input.toJson(),
+        'input': input.toUpdateJson(),
       },
     );
     final result = await client.mutate(options);
