@@ -7,13 +7,14 @@ import 'package:realestate_app/config/api_config.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
+import 'package:realestate_app/viewmodels/visits_viewmodel.dart';
 import 'package:realestate_app/views/splash_decision_view.dart';
 
 void main() async {
   // Asegura que los bindings de Flutter estén inicializados
   WidgetsFlutterBinding.ensureInitialized();
   await initHiveForFlutter();
-  
+
   // Configurar HTTP client globalmente
   HttpOverrides.global = MyHttpOverrides();
 
@@ -74,6 +75,7 @@ class _MyAppState extends State<MyApp> {
         providers: [
           ChangeNotifierProvider(create: (_) => AuthViewModel()),
           ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+          ChangeNotifierProvider(create: (_) => VisitViewModel()),
         ],
         child: MaterialApp(
           title: 'RealEstate App',
@@ -81,7 +83,7 @@ class _MyAppState extends State<MyApp> {
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,
           themeMode: _themeMode,
-          home: const SplashDecisionView(), 
+          home: const SplashDecisionView(),
         ),
       ),
     );

@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:realestate_app/views/visits/visit_booking_view.dart';
 import '../../models/property.dart';
 import 'package:intl/intl.dart';
-
 
 class PropertyDetailView extends StatelessWidget {
   final Property property;
 
-  const PropertyDetailView({Key? key, required this.property}) : super(key: key);
+  const PropertyDetailView({Key? key, required this.property})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+    final currencyFormat =
+        NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
     final areaFormat = NumberFormat.decimalPattern('es_CO');
 
     return Scaffold(
@@ -30,20 +32,28 @@ class PropertyDetailView extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     property.title,
-                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     '${property.transactionType} - ${property.propertyType}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Theme.of(context).primaryColor),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(color: Theme.of(context).primaryColor),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     currencyFormat.format(property.price),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(color: Colors.green[700], fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: Colors.green[700], fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  _buildInfoRow(context, Icons.location_on, '${property.address}, ${property.city}, ${property.country}'),
+                  _buildInfoRow(context, Icons.location_on,
+                      '${property.address}, ${property.city}, ${property.country}'),
                   const SizedBox(height: 16),
                   Divider(),
                   const SizedBox(height: 16),
@@ -54,7 +64,10 @@ class PropertyDetailView extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     property.description ?? 'No hay descripción disponible.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5),
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 16),
                   Divider(),
@@ -64,14 +77,43 @@ class PropertyDetailView extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 12),
-                  _buildFeatureChip('Habitaciones', property.bedrooms.toString(), Icons.king_bed),
-                  _buildFeatureChip('Área total', '${areaFormat.format(property.area)} m²', Icons.straighten),
-                  _buildFeatureChip('Área construida', '${areaFormat.format(property.builtArea)} m²', Icons.crop_square),
-                   const SizedBox(height: 16),
+                  _buildFeatureChip('Habitaciones',
+                      property.bedrooms.toString(), Icons.king_bed),
+                  _buildFeatureChip(
+                      'Área total',
+                      '${areaFormat.format(property.area)} m²',
+                      Icons.straighten),
+                  _buildFeatureChip(
+                      'Área construida',
+                      '${areaFormat.format(property.builtArea)} m²',
+                      Icons.crop_square),
+                  const SizedBox(height: 16),
                   Divider(),
                   const SizedBox(height: 16),
-                  _buildInfoRow(context, Icons.info_outline, 'Estado: ${property.status}'),
-
+                  _buildInfoRow(context, Icons.info_outline,
+                      'Estado: ${property.status}'),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => VisitBookingView(
+                            propertyId: property.idProperty,
+                            ownerId: property.idUser,
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.calendar_today),
+                    label: const Text('Agendar visita'),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      textStyle: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(color: Colors.white),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -98,11 +140,13 @@ class PropertyDetailView extends StatelessWidget {
         enlargeCenterPage: true,
         viewportFraction: 1.0,
       ),
-      items: property.photos.map((item) => Container(
-        child: Center(
-          child: Image.network(item, fit: BoxFit.cover, width: double.infinity)
-        ),
-      )).toList(),
+      items: property.photos
+          .map((item) => Container(
+                child: Center(
+                    child: Image.network(item,
+                        fit: BoxFit.cover, width: double.infinity)),
+              ))
+          .toList(),
     );
   }
 
@@ -111,15 +155,17 @@ class PropertyDetailView extends StatelessWidget {
       children: <Widget>[
         Icon(icon, color: Theme.of(context).primaryColor),
         const SizedBox(width: 16),
-        Expanded(child: Text(text, style: Theme.of(context).textTheme.titleMedium)),
+        Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.titleMedium)),
       ],
     );
   }
-   Widget _buildFeatureChip(String label, String value, IconData icon) {
+
+  Widget _buildFeatureChip(String label, String value, IconData icon) {
     return Chip(
       avatar: Icon(icon, size: 18),
       label: Text('$label: $value'),
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     );
   }
-} 
+}

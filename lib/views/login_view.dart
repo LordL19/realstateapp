@@ -5,7 +5,7 @@ import 'package:realestate_app/widgets/animations/fade_in.dart';
 import 'package:realestate_app/widgets/shared/app_text_field.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import 'main_tab_view.dart';
-import 'register_view.dart';
+import 'register/register_wizard.dart';
 import 'package:lottie/lottie.dart';
 
 class LoginView extends StatefulWidget {
@@ -40,7 +40,8 @@ class _LoginViewState extends State<LoginView> {
       _passwordCtrl.text.trim(),
     );
 
-    final msg = success ? 'Login exitoso' : auth.errorMessage ?? 'Error inesperado';
+    final msg =
+        success ? 'Login exitoso' : auth.errorMessage ?? 'Error inesperado';
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -58,7 +59,6 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
       body: Consumer<AuthViewModel>(
@@ -153,7 +153,8 @@ class _LoginViewState extends State<LoginView> {
                   child: OutlinedButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const RegisterView()),
+                      MaterialPageRoute(
+                          builder: (_) => const RegisterFormWizard()),
                     ),
                     child: const Text('Registrarse'),
                   ),
