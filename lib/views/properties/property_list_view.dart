@@ -6,6 +6,7 @@ import 'property_form_view.dart';
 import '../../viewmodels/profile_viewmodel.dart';
 import '../../models/property.dart';
 import 'property_detail_view.dart';
+import '../../viewmodels/favorite_viewmodel.dart';
 
 class PropertyListView extends StatelessWidget {
   const PropertyListView({Key? key}) : super(key: key);
@@ -37,29 +38,34 @@ class PropertyListView extends StatelessWidget {
                 itemCount: viewModel.publicProperties.length,
                 itemBuilder: (context, index) {
                   final property = viewModel.publicProperties[index];
-                  return Card(
-                    margin: const EdgeInsets.all(8.0),
-                    clipBehavior: Clip.antiAlias,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => PropertyDetailView(property: property),
+                  return Consumer<FavoriteViewModel>(
+                    builder: (context, favoriteVM, child) {
+                      final isFavorite = favoriteVM.isFavorite(property.idProperty);
+                      return Card(
+                        margin: const EdgeInsets.all(8.0),
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => PropertyDetailView(property: property),
+                              ),
+                            );
+                          },
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildPropertyImageWithFavorite(property, isFavorite, () => favoriteVM.toggleFavorite(property.idProperty)),
+                              Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: _buildPropertyInfo(property),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildPropertyImage(property),
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: _buildPropertyInfo(property),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
               );
@@ -71,25 +77,40 @@ class PropertyListView extends StatelessWidget {
     );
   }
 
-  Widget _buildPropertyImage(Property property) {
-    return SizedBox(
-      height: 200,
-      width: double.infinity,
-      child: property.photos.isNotEmpty
-          ? Image.network(
-              property.photos.first,
-              fit: BoxFit.cover,
-              loadingBuilder: (context, child, progress) {
-                return progress == null ? child : const Center(child: CircularProgressIndicator());
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.broken_image, size: 40, color: Colors.grey);
-              },
-            )
-          : Container(
-              color: Colors.grey[200],
-              child: const Icon(Icons.house, size: 80, color: Colors.grey),
+  Widget _buildPropertyImageWithFavorite(Property property, bool isFavorite, VoidCallback onToggle) {
+    return Stack(
+      children: [
+        SizedBox(
+          height: 200,
+          width: double.infinity,
+          child: property.photos.isNotEmpty
+              ? Image.network(
+                  property.photos.first,
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    return progress == null ? child : const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(Icons.broken_image, size: 40, color: Colors.grey);
+                  },
+                )
+              : Container(
+                  color: Colors.grey[200],
+                  child: const Icon(Icons.house, size: 80, color: Colors.grey),
+                ),
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: onToggle,
+            child: Icon(
+              isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: Colors.redAccent,
             ),
+          ),
+        ),
+      ],
     );
   }
 

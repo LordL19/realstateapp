@@ -5,6 +5,8 @@ import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 import 'package:realestate_app/views/profile_view.dart';
 import 'package:realestate_app/views/properties/my_properties_list_view.dart';
 import 'package:realestate_app/views/properties/property_list_view.dart';
+import 'package:realestate_app/views/properties/favorite_list_view.dart';
+import 'package:realestate_app/viewmodels/favorite_viewmodel.dart';
 
 class MainTabView extends StatelessWidget {
   const MainTabView({Key? key}) : super(key: key);
@@ -12,8 +14,11 @@ class MainTabView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final client = GraphQLProvider.of(context).value;
-    return ChangeNotifierProvider(
-      create: (context) => PropertyViewModel(client: client)..fetchProperties(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => PropertyViewModel(client: client)..fetchProperties()),
+        ChangeNotifierProvider(create: (_) => FavoriteViewModel()..fetchFavorites()),
+      ],
       child: const _MainTabViewContent(),
     );
   }
@@ -32,6 +37,7 @@ class _MainTabViewContentState extends State<_MainTabViewContent> {
   static const List<Widget> _widgetOptions = <Widget>[
     PropertyListView(),
     MyPropertiesListView(),
+    FavoriteListView(),
     ProfileView(),
   ];
 
@@ -43,6 +49,12 @@ class _MainTabViewContentState extends State<_MainTabViewContent> {
             PropertyState.initial) {
       context.read<PropertyViewModel>().fetchMyProperties();
     }
+
+    if (index == 2 &&
+        context.read<FavoriteViewModel>().state == FavoriteState.initial) {
+      context.read<FavoriteViewModel>().fetchFavorites();
+    }
+
     setState(() {
       _selectedIndex = index;
     });
@@ -64,6 +76,10 @@ class _MainTabViewContentState extends State<_MainTabViewContent> {
           BottomNavigationBarItem(
             icon: Icon(Icons.business),
             label: 'Mis Propiedades',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite),
+            label: 'Favoritos',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
