@@ -3,26 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/config/api_config.dart';
+import 'package:realestate_app/theme/theme.dart';
+import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
-import 'config/api_config.dart';
-import 'viewmodels/auth_viewmodel.dart';
-import 'views/login_view.dart';
+import 'package:realestate_app/views/splash_decision_view.dart';
 
 void main() async {
+  // Asegura que los bindings de Flutter estén inicializados
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Inicializar Hive para el cache de GraphQL
   await initHiveForFlutter();
   
   // Configurar HTTP client globalmente
   HttpOverrides.global = MyHttpOverrides();
-  
+
   // Manejo de errores global
   FlutterError.onError = (FlutterErrorDetails details) {
     FlutterError.dumpErrorToConsole(details);
   };
-  
-  runApp(MyApp());
+
+  runApp(const MyApp());
 }
 
 class MyHttpOverrides extends HttpOverrides {
@@ -34,8 +34,15 @@ class MyHttpOverrides extends HttpOverrides {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final ThemeMode _themeMode = ThemeMode.system;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +59,6 @@ class MyApp extends StatelessWidget {
       ApiConfig.getGraphQLEndpoint(),
     );
 
-    // Encadenamos el link de autenticación con el link HTTP
     final Link link = authLink.concat(httpLink);
 
     final ValueNotifier<GraphQLClient> client = ValueNotifier(
@@ -65,18 +71,17 @@ class MyApp extends StatelessWidget {
     return GraphQLProvider(
       client: client,
       child: MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-      ],
-      child: MaterialApp(
-        title: 'RealEstate App',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-          visualDensity: VisualDensity.adaptivePlatformDensity,
-        ),
-        home: const LoginView(),
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthViewModel()),
+          ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+        ],
+        child: MaterialApp(
+          title: 'RealEstate App',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light,
+          darkTheme: AppTheme.dark,
+          themeMode: _themeMode,
+          home: const SplashDecisionView(), 
         ),
       ),
     );
