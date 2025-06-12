@@ -76,11 +76,13 @@ class MyPropertiesListView extends StatelessWidget {
                                 );
                               },
                             ),
+                            /*
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () => _showDeleteConfirmation(
                                   context, viewModel, property.idProperty),
                             ),
+                            */
                           ],
                         ),
                       ),
