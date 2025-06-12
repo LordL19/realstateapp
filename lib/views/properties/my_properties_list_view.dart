@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/views/publish_property/publish_wizard.dart';
 import '../../viewmodels/property_viewmodel.dart';
 import 'property_form_view.dart';
 import 'property_detail_view.dart';
@@ -23,7 +24,8 @@ class MyPropertiesListView extends StatelessWidget {
       ),
       body: Consumer<PropertyViewModel>(
         builder: (context, viewModel, child) {
-          final filteredProperties = viewModel.applyFilters(viewModel.myProperties);
+          final filteredProperties =
+              viewModel.applyFilters(viewModel.myProperties);
 
           return Column(
             children: [
@@ -35,11 +37,13 @@ class MyPropertiesListView extends StatelessWidget {
                       case PropertyState.loading:
                         return const Center(child: CircularProgressIndicator());
                       case PropertyState.error:
-                        return Center(child: Text('Error: ${viewModel.errorMessage}'));
+                        return Center(
+                            child: Text('Error: ${viewModel.errorMessage}'));
                       case PropertyState.loaded:
                         if (filteredProperties.isEmpty) {
                           return const Center(
-                            child: Text('No tienes propiedades que coincidan con los filtros.'),
+                            child: Text(
+                                'No tienes propiedades que coincidan con los filtros.'),
                           );
                         }
                         return ListView.builder(
@@ -71,15 +75,16 @@ class MyPropertiesListView extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        icon: const Icon(Icons.edit, color: Colors.blue),
+                                        icon: const Icon(Icons.edit,
+                                            color: Colors.blue),
                                         onPressed: () {
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
                                               builder: (_) =>
                                                   ChangeNotifierProvider.value(
                                                 value: viewModel,
-                                                child:
-                                                    PropertyFormView(property: property),
+                                                child: PropertyFormView(
+                                                    property: property),
                                               ),
                                             ),
                                           );
@@ -116,7 +121,7 @@ class MyPropertiesListView extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => ChangeNotifierProvider.value(
                 value: context.read<PropertyViewModel>(),
-                child: const PropertyFormView(),
+                child: const PublishWizard(),
               ),
             ),
           );

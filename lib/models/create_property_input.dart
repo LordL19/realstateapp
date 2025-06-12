@@ -12,6 +12,10 @@ class CreatePropertyInput {
   final int bedrooms;
   final List<String> photos;
 
+  /* --- sólo para UI --- */
+  final double? latitude; // nullable
+  final double? longitude;
+
   CreatePropertyInput({
     required this.title,
     required this.description,
@@ -25,6 +29,8 @@ class CreatePropertyInput {
     required this.builtArea,
     required this.bedrooms,
     required this.photos,
+    this.latitude,
+    this.longitude,
   });
 
   Map<String, dynamic> toJson() {
@@ -43,7 +49,7 @@ class CreatePropertyInput {
       'photos': photos,
     };
   }
-  
+
   // Method specifically for update operations
   Map<String, dynamic> toUpdateJson() {
     return {
@@ -61,4 +67,4 @@ class CreatePropertyInput {
       'photos': photos,
     };
   }
-} 
+}

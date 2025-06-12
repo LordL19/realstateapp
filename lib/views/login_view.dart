@@ -139,12 +139,24 @@ class _LoginViewState extends State<LoginView> {
                   child: SizedBox(
                     width: double.infinity,
                     height: AppSpacing.xxxl,
-                    child: auth.isLoading
-                        ? const Center(child: CircularProgressIndicator())
-                        : ElevatedButton(
-                            onPressed: _login,
-                            child: const Text('Iniciar sesión'),
-                          ),
+                    child: ElevatedButton(
+                      onPressed: auth.isLoading ? null : _login,
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 48),
+                      ),
+                      child: auth.isLoading
+                          ? SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(
+                                  Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            )
+                          : const Text('Iniciar sesión'),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.l),

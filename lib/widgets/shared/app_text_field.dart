@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class AppTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
-  final IconData icon;
+  final IconData? icon; // ahora opcional
   final bool obscure;
   final Widget? suffix;
   final FormFieldValidator<String>? validator;
@@ -12,7 +12,7 @@ class AppTextField extends StatelessWidget {
   const AppTextField({
     required this.controller,
     required this.label,
-    required this.icon,
+    this.icon, // ya no requerido
     this.obscure = false,
     this.suffix,
     this.validator,
@@ -27,15 +27,12 @@ class AppTextField extends StatelessWidget {
       validator: validator,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon),
+        prefixIcon: icon != null ? Icon(icon) : null, // solo si no es null
         suffixIcon: suffix,
       ),
       textInputAction: obscure ? TextInputAction.done : TextInputAction.next,
       onFieldSubmitted: (_) {
-        if (!obscure) {
-          // pasar al siguiente campo
-          FocusScope.of(context).nextFocus();
-        }
+        if (!obscure) FocusScope.of(context).nextFocus();
       },
     );
   }
