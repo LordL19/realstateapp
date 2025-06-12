@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:realestate_app/services/auth_service.dart';
 import 'package:realestate_app/views/login_view.dart';
+import 'package:realestate_app/views/main_tab_view.dart';
 import 'package:realestate_app/views/profile_view.dart'; // o HomeView si prefieres
 
 class SplashDecisionView extends StatefulWidget {
@@ -25,7 +26,7 @@ class _SplashDecisionViewState extends State<SplashDecisionView> {
 
     if (hasToken) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ProfileView()),
+        MaterialPageRoute(builder: (_) => const MainTabView()),
       );
     } else {
       Navigator.of(context).pushReplacement(

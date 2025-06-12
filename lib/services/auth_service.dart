@@ -15,7 +15,7 @@ class AuthService {
     if (kIsWeb) {
       return "http://localhost:63063";
     } else if (Platform.isAndroid) {
-      // ✅ IP actualizada para dispositivo físico
+      //  IP actualizada para dispositivo físico
       return "http://10.26.7.251:63063";
     } else {
       return "http://localhost:63063"; // para iOS simulador o Windows
@@ -93,7 +93,7 @@ class AuthService {
     } catch (e) {
       developer.log('Error general en login: $e');
       if (e.toString().contains('XMLHttpRequest')) {
-        throw Exception('Error CORS: Configura CORS en tu API C#');
+        throw Exception('Error CORS: Configura CORS en tu API.');
       }
       throw Exception('Error de conexión: ${e.toString()}');
     }
@@ -127,8 +127,7 @@ class AuthService {
         "city": city.trim(),
       };
 
-      developer.log('Enviando datos de registro:');
-      developer.log(jsonEncode(requestBody));
+      developer.log('Enviando datos de registro: ${jsonEncode(requestBody)}');
 
       final response = await _client
           .post(
@@ -164,51 +163,50 @@ class AuthService {
   }
 
   Future<Map<String, dynamic>?> getProfile() async {
-  try {
-    final token = await storage.read(key: 'jwt');
+    try {
+      final token = await storage.read(key: 'jwt');
 
-    if (token == null) {
-      developer.log('❌ No hay token guardado, no se puede obtener el perfil.');
+      if (token == null) {
+        developer.log('❌ No hay token guardado, no se puede obtener el perfil.');
+        return null;
+      }
+
+      final url = '$baseUrl/auth/profile';
+      developer.log('🔎 Solicitando perfil desde: $url');
+      developer.log('🔐 Usando token: $token');
+
+      final response = await _client.get(
+        Uri.parse(url),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      ).timeout(_timeout);
+
+      developer.log('Código de respuesta: ${response.statusCode}');
+      developer.log('Cuerpo de respuesta: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body);
+        developer.log(' Perfil recibido correctamente: $decoded');
+        return decoded;
+      } else if (response.statusCode == 401) {
+        developer.log(' Token inválido o expirado. Eliminando token.');
+        await storage.delete(key: 'jwt');
+      } else {
+        developer.log(' Error inesperado: Código ${response.statusCode}');
+      }
+
       return null;
+    } on TimeoutException {
+      developer.log('Timeout al obtener perfil');
+      throw Exception('Tiempo de espera agotado');
+    } catch (e) {
+      developer.log('Error al obtener perfil: $e');
+      throw Exception('Error al obtener perfil: ${e.toString()}');
     }
-
-    final url = '$baseUrl/auth/profile';
-    developer.log('🔎 Solicitando perfil desde: $url');
-    developer.log('🔐 Usando token: $token');
-
-    final response = await _client.get(
-      Uri.parse(url),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Accept': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-      },
-    ).timeout(_timeout);
-
-    developer.log('📥 Código de respuesta: ${response.statusCode}');
-    developer.log('📦 Cuerpo de respuesta: ${response.body}');
-
-    if (response.statusCode == 200) {
-      final decoded = jsonDecode(response.body);
-      developer.log('✅ Perfil recibido correctamente: $decoded');
-      return decoded;
-    } else if (response.statusCode == 401) {
-      developer.log('⚠️ Token inválido o expirado. Eliminando token.');
-      await storage.delete(key: 'jwt');
-    } else {
-      developer.log('❌ Error inesperado: Código ${response.statusCode}');
-    }
-
-    return null;
-  } on TimeoutException {
-    developer.log('⏰ Timeout al obtener perfil');
-    throw Exception('Tiempo de espera agotado');
-  } catch (e) {
-    developer.log('❌ Error al obtener perfil: $e');
-    throw Exception('Error al obtener perfil: ${e.toString()}');
   }
-}
-
 
   Future<void> logout() async {
     await storage.deleteAll();

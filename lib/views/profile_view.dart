@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/views/visits/owner_visits_view.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../views/visits/my_visits_view.dart';
 import 'login_view.dart';
 
 class ProfileView extends StatefulWidget {
@@ -11,9 +13,8 @@ class ProfileView extends StatefulWidget {
   _ProfileViewState createState() => _ProfileViewState();
 }
 
-class _ProfileViewState extends State<ProfileView> 
+class _ProfileViewState extends State<ProfileView>
     with AutomaticKeepAliveClientMixin {
-  
   @override
   bool get wantKeepAlive => true;
 
@@ -30,10 +31,10 @@ class _ProfileViewState extends State<ProfileView>
     try {
       final authVM = context.read<AuthViewModel>();
       final profileVM = context.read<ProfileViewModel>();
-      
+
       await authVM.logout();
       profileVM.clearProfile();
-      
+
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const LoginView()),
@@ -63,7 +64,7 @@ class _ProfileViewState extends State<ProfileView>
   @override
   Widget build(BuildContext context) {
     super.build(context); // Importante para AutomaticKeepAliveClientMixin
-    
+
     return WillPopScope(
       onWillPop: () async {
         await _logout();
@@ -174,7 +175,7 @@ class _ProfileViewState extends State<ProfileView>
                             radius: 40,
                             backgroundColor: Colors.white,
                             child: Text(
-                              vm.profile!.firstName.isNotEmpty 
+                              vm.profile!.firstName.isNotEmpty
                                   ? vm.profile!.firstName[0].toUpperCase()
                                   : "U",
                               style: const TextStyle(
@@ -204,9 +205,9 @@ class _ProfileViewState extends State<ProfileView>
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 24),
-                    
+
                     // Información del perfil
                     const Text(
                       "Información Personal",
@@ -216,33 +217,65 @@ class _ProfileViewState extends State<ProfileView>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    
+
                     _buildInfoCard(
                       icon: Icons.person,
                       title: "Nombre Completo",
                       value: "${vm.profile!.firstName} ${vm.profile!.lastName}",
                     ),
-                    
+
                     _buildInfoCard(
                       icon: Icons.email,
                       title: "Email",
                       value: vm.profile!.email,
                     ),
-                    
+
                     _buildInfoCard(
                       icon: Icons.location_city,
                       title: "Ciudad",
-                      value: vm.profile!.city.isNotEmpty ? vm.profile!.city : "No especificada",
+                      value: vm.profile!.city.isNotEmpty
+                          ? vm.profile!.city
+                          : "No especificada",
                     ),
-                    
+
                     _buildInfoCard(
                       icon: Icons.flag,
                       title: "País",
-                      value: vm.profile!.country.isNotEmpty ? vm.profile!.country : "No especificado",
+                      value: vm.profile!.country.isNotEmpty
+                          ? vm.profile!.country
+                          : "No especificado",
                     ),
-                    
+
+                    ListTile(
+                      leading: const Icon(Icons.visibility),
+                      title: const Text("Mis visitas agendadas"),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const MyVisitsView()),
+                        );
+                      },
+                    ),
+
+                    ListTile(
+                      leading: const Icon(Icons.visibility),
+                      title: const Text("Visitas solicitadas"),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const OwnerVisitsView()),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 16),
+
                     const SizedBox(height: 32),
-                    
+
                     // Botón de logout
                     SizedBox(
                       width: double.infinity,
