@@ -99,6 +99,18 @@ class VisitViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> cancelVisit(String idVisitRequest) async {
+    try {
+      await _visitService.cancelVisit(idVisitRequest);
+      await fetchMyVisits(); // Recargar visitas del interesado
+      return true;
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     errorMessage = null;
     notifyListeners();
