@@ -286,7 +286,7 @@ class _ProfileViewState extends State<ProfileView>
                         label: const Text("Cerrar Sesión"),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
+                          foregroundColor: const Color.fromARGB(249, 255, 255, 255),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -338,6 +338,7 @@ class _ProfileViewState extends State<ProfileView>
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
+                    color: Colors.black, /// MODIFICACION DE LA LETRA BLANCA QUE NO SE LEIA
                   ),
                 ),
               ],

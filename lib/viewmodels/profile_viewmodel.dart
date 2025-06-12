@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/user_profile.dart';
 import '../services/profile_service.dart';
+import 'dart:developer' as developer;
 
 class ProfileViewModel extends ChangeNotifier {
   final ProfileService _profileService = ProfileService();
@@ -30,13 +31,21 @@ class ProfileViewModel extends ChangeNotifier {
   Future<void> fetchProfile() async {
     _setLoading(true);
     _setError(null);
+    developer.log('📡 Llamando a fetchProfile()...');
 
     try {
-      _profile = await _profileService.getProfile();
-      if (_profile == null) {
+      final profileData = await _profileService.getProfile();
+      if (profileData == null) {
+        developer.log('❌ Perfil devuelto como null');
         _setError("No se pudo cargar el perfil");
+        _profile = null;
+        return;
       }
+
+      developer.log('🎯 Perfil asignado correctamente');
+      _profile = profileData;
     } catch (e) {
+      developer.log('❌ Error capturado en fetchProfile(): $e');
       _setError(e.toString().contains('Exception: ') 
           ? e.toString().replaceAll('Exception: ', '') 
           : "Error al cargar perfil");
