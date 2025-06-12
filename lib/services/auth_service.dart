@@ -5,22 +5,22 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter/foundation.dart'; // Para detectar plataforma
 import 'dart:io' show Platform;
+
 class AuthService {
   static final _client = http.Client();
   final storage = const FlutterSecureStorage();
 
   // CONFIGURACIÓN AUTOMÁTICA SEGÚN PLATAFORMA
-String get baseUrl {
-  if (kIsWeb) {
-    return "http://localhost:63063";
-  } else if (Platform.isAndroid) {
-    // Cambiar a IP de tu PC real si estás usando DISPOSITIVO físico
-    return "http://192.168.100.43:63063"; // <-- CAMBIA ESTA IP si tu red ha cambiado
-  } else {
-    return "http://localhost:63063"; // para iOS simulador o Windows
+  String get baseUrl {
+    if (kIsWeb) {
+      return "http://localhost:63063";
+    } else if (Platform.isAndroid) {
+      // ✅ IP actualizada para dispositivo físico
+      return "http://10.26.7.251:63063";
+    } else {
+      return "http://localhost:63063"; // para iOS simulador o Windows
+    }
   }
-}
-
 
   static const _timeout = Duration(seconds: 30);
 
@@ -30,23 +30,19 @@ String get baseUrl {
       developer.log('Probando conexión a: $baseUrl');
       developer.log('Plataforma: ${kIsWeb ? "WEB" : "MOBILE"}');
 
-      // Probar endpoint simple primero
       final response = await _client.get(
         Uri.parse('$baseUrl'),
         headers: {'Accept': 'application/json'},
       ).timeout(const Duration(seconds: 10));
 
       developer.log('Respuesta del servidor: ${response.statusCode}');
-      return response.statusCode == 200 ||
-          response.statusCode ==
-              404; // 404 también indica que el servidor responde
+      return response.statusCode == 200 || response.statusCode == 404;
     } catch (e) {
       developer.log('Error de conexión: $e');
       return false;
     }
   }
 
-  /// Login con debug
   Future<String?> login(String email, String password) async {
     try {
       developer.log('Intentando login para: $email');
@@ -66,7 +62,7 @@ String get baseUrl {
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*', // Para CORS en web
+              'Access-Control-Allow-Origin': '*',
             },
             body: jsonEncode(requestBody),
           )
@@ -90,7 +86,7 @@ String get baseUrl {
     } on TimeoutException {
       developer.log('Timeout en login');
       throw Exception(
-          'Tiempo de espera agotado. ¿Está tu API corriendo en localhost:5000?');
+          'Tiempo de espera agotado. ¿Está tu API corriendo en 10.26.7.251:63063?');
     } on FormatException catch (e) {
       developer.log('Error de formato: $e');
       throw Exception('Respuesta del servidor inválida');
@@ -103,7 +99,6 @@ String get baseUrl {
     }
   }
 
-  /// Registro con debug completo
   Future<bool> register({
     required String email,
     required String password,
@@ -141,7 +136,7 @@ String get baseUrl {
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'Access-Control-Allow-Origin': '*', // Para CORS en web
+              'Access-Control-Allow-Origin': '*',
             },
             body: jsonEncode(requestBody),
           )
@@ -151,15 +146,15 @@ String get baseUrl {
       developer.log('Respuesta body: ${response.body}');
 
       final success = response.statusCode == 200 || response.statusCode == 201;
-      developer.log(success ? ' Registro exitoso' : ' Registro fallido');
+      developer.log(success ? 'Registro exitoso' : 'Registro fallido');
 
       return success;
     } on TimeoutException {
-      developer.log(' Timeout en registro');
+      developer.log('Timeout en registro');
       throw Exception(
-          'Tiempo de espera agotado. ¿Está tu API C# corriendo en localhost:5000?');
+          'Tiempo de espera agotado. ¿Está tu API corriendo en 10.26.7.251:63063?');
     } catch (e) {
-      developer.log(' Error en registro: $e');
+      developer.log('Error en registro: $e');
       if (e.toString().contains('XMLHttpRequest') ||
           e.toString().contains('CORS')) {
         throw Exception('Error CORS: Debes configurar CORS en tu API C#');
@@ -168,46 +163,57 @@ String get baseUrl {
     }
   }
 
-  /// Obtener perfil autenticado
   Future<Map<String, dynamic>?> getProfile() async {
-    try {
-      final token = await storage.read(key: 'jwt');
-      if (token == null) return null;
+  try {
+    final token = await storage.read(key: 'jwt');
 
-      developer.log(' Obteniendo perfil desde: $baseUrl/auth/profile');
-
-      final response = await _client.get(
-        Uri.parse('$baseUrl/auth/profile'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Accept': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      ).timeout(_timeout);
-
-      developer.log(' Respuesta perfil - Código: ${response.statusCode}');
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 401) {
-        await storage.delete(key: 'jwt');
-      }
+    if (token == null) {
+      developer.log('❌ No hay token guardado, no se puede obtener el perfil.');
       return null;
-    } on TimeoutException {
-      developer.log(' Timeout al obtener perfil');
-      throw Exception('Tiempo de espera agotado');
-    } catch (e) {
-      developer.log(' Error al obtener perfil: $e');
-      throw Exception('Error al obtener perfil: ${e.toString()}');
     }
-  }
 
-  /// Logout
+    final url = '$baseUrl/auth/profile';
+    developer.log('🔎 Solicitando perfil desde: $url');
+    developer.log('🔐 Usando token: $token');
+
+    final response = await _client.get(
+      Uri.parse(url),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    ).timeout(_timeout);
+
+    developer.log('📥 Código de respuesta: ${response.statusCode}');
+    developer.log('📦 Cuerpo de respuesta: ${response.body}');
+
+    if (response.statusCode == 200) {
+      final decoded = jsonDecode(response.body);
+      developer.log('✅ Perfil recibido correctamente: $decoded');
+      return decoded;
+    } else if (response.statusCode == 401) {
+      developer.log('⚠️ Token inválido o expirado. Eliminando token.');
+      await storage.delete(key: 'jwt');
+    } else {
+      developer.log('❌ Error inesperado: Código ${response.statusCode}');
+    }
+
+    return null;
+  } on TimeoutException {
+    developer.log('⏰ Timeout al obtener perfil');
+    throw Exception('Tiempo de espera agotado');
+  } catch (e) {
+    developer.log('❌ Error al obtener perfil: $e');
+    throw Exception('Error al obtener perfil: ${e.toString()}');
+  }
+}
+
+
   Future<void> logout() async {
     await storage.deleteAll();
   }
 
-  /// Verificar si hay token válido
   Future<bool> hasValidToken() async {
     final token = await storage.read(key: 'jwt');
     return token != null && token.isNotEmpty;

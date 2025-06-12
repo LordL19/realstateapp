@@ -29,6 +29,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /// LOGIN
+  /// Llama a AuthService.login(), que ya se encarga de guardar el token.
   Future<bool> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
       _setError("Email y contraseña son requeridos");
@@ -42,7 +43,7 @@ class AuthViewModel extends ChangeNotifier {
       final token = await _authService.login(email, password);
       
       if (token != null) {
-        return true;
+        return true; // Token fue guardado por AuthService
       } else {
         _setError("Email o contraseña inválidos");
         return false;
@@ -101,6 +102,7 @@ class AuthViewModel extends ChangeNotifier {
   }
 
   /// LOGOUT
+  /// Elimina el token desde AuthService
   Future<void> logout() async {
     await _authService.logout();
     notifyListeners();
