@@ -7,7 +7,9 @@ import 'package:realestate_app/config/api_config.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
+import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 import 'package:realestate_app/viewmodels/visits_viewmodel.dart';
+import 'package:realestate_app/viewmodels/visit_history_viewmodel.dart';
 import 'package:realestate_app/views/splash_decision_view.dart';
 
 void main() async {
@@ -75,7 +77,9 @@ class _MyAppState extends State<MyApp> {
         providers: [
           ChangeNotifierProvider(create: (_) => AuthViewModel()),
           ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+          ChangeNotifierProvider(create: (_) => PropertyViewModel(client: client.value)),
           ChangeNotifierProvider(create: (_) => VisitViewModel()),
+          ChangeNotifierProvider(create: (_) => VisitHistoryViewModel()),
         ],
         child: MaterialApp(
           title: 'RealEstate App',

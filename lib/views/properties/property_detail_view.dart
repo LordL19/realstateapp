@@ -1,16 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:provider/provider.dart';
+import 'package:realestate_app/models/create_visit_history_request.dart';
+import 'package:realestate_app/viewmodels/visit_history_viewmodel.dart';
+import 'package:realestate_app/views/properties/property_visit_history_view.dart';
 import 'package:realestate_app/views/visits/property_visits_view.dart';
 import 'package:realestate_app/views/visits/visit_booking_view.dart';
 import '../../models/property.dart';
 import 'package:intl/intl.dart';
 
-class PropertyDetailView extends StatelessWidget {
+class PropertyDetailView extends StatefulWidget {
   final Property property;
   final bool isOwner;
 
   const PropertyDetailView(
       {super.key, required this.property, required this.isOwner});
+
+  @override
+  State<PropertyDetailView> createState() => _PropertyDetailViewState();
+}
+
+class _PropertyDetailViewState extends State<PropertyDetailView> {
+  @override
+  void initState() {
+    super.initState();
+    // Record visit to property when details are viewed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final visitHistoryVM = Provider.of<VisitHistoryViewModel>(context, listen: false);
+      final request = CreateVisitHistoryRequest(
+        idProperty: widget.property.idProperty,
+        propertyTitle: widget.property.title,
+        propertyType: widget.property.propertyType ?? 'No especificado',
+        transactionType: widget.property.transactionType ?? 'No especificado',
+        city: widget.property.city,
+        country: widget.property.country,
+        ownerId: widget.property.idUser,
+      );
+      visitHistoryVM.recordVisit(request);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +48,7 @@ class PropertyDetailView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(property.title),
+        title: Text(widget.property.title),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -33,7 +61,7 @@ class PropertyDetailView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    property.title,
+                    widget.property.title,
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium
@@ -41,7 +69,7 @@ class PropertyDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${property.transactionType} - ${property.propertyType}',
+                    '${widget.property.transactionType} - ${widget.property.propertyType}',
                     style: Theme.of(context)
                         .textTheme
                         .titleMedium
@@ -49,13 +77,13 @@ class PropertyDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    currencyFormat.format(property.price),
+                    currencyFormat.format(widget.property.price),
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         color: Colors.green[700], fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   _buildInfoRow(context, Icons.location_on,
-                      '${property.address}, ${property.city}, ${property.country}'),
+                      '${widget.property.address}, ${widget.property.city}, ${widget.property.country}'),
                   const SizedBox(height: 16),
                   Divider(),
                   const SizedBox(height: 16),
@@ -65,7 +93,7 @@ class PropertyDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    property.description ?? 'No hay descripción disponible.',
+                    widget.property.description ?? 'No hay descripción disponible.',
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
@@ -80,44 +108,61 @@ class PropertyDetailView extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureChip('Habitaciones',
-                      property.bedrooms.toString(), Icons.king_bed),
+                      widget.property.bedrooms.toString(), Icons.king_bed),
                   _buildFeatureChip(
                       'Área total',
-                      '${areaFormat.format(property.area)} m²',
+                      '${areaFormat.format(widget.property.area)} m²',
                       Icons.straighten),
                   _buildFeatureChip(
                       'Área construida',
-                      '${areaFormat.format(property.builtArea)} m²',
+                      '${areaFormat.format(widget.property.builtArea)} m²',
                       Icons.crop_square),
                   const SizedBox(height: 16),
                   Divider(),
                   const SizedBox(height: 16),
                   _buildInfoRow(context, Icons.info_outline,
-                      'Estado: ${property.status}'),
-                  ListTile(
-                    leading: const Icon(Icons.visibility),
-                    title: const Text("Visitas solicitadas"),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => PropertyVisitsView(
-                                  propertyId: property.idProperty,
-                                  propertyTitle: property.title,
-                                )),
-                      );
-                    },
-                  ),
-                  if (!isOwner)
+                      'Estado: ${widget.property.status}'),
+                  if (widget.isOwner) ...[
+                    ListTile(
+                      leading: const Icon(Icons.visibility),
+                      title: const Text("Visitas agendadas"),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => PropertyVisitsView(
+                                    propertyId: widget.property.idProperty,
+                                    propertyTitle: widget.property.title,
+                                  )),
+                        );
+                      },
+                    ),
+                    ListTile(
+                      leading: const Icon(Icons.history),
+                      title: const Text("Historial de visitas"),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => PropertyVisitHistoryView(
+                                    propertyId: widget.property.idProperty,
+                                    propertyTitle: widget.property.title,
+                                  )),
+                        );
+                      },
+                    ),
+                  ],
+                  if (!widget.isOwner)
                     ElevatedButton.icon(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => VisitBookingView(
-                              propertyId: property.idProperty,
-                              ownerId: property.idUser,
+                              propertyId: widget.property.idProperty,
+                              ownerId: widget.property.idUser,
                             ),
                           ),
                         );
@@ -142,7 +187,7 @@ class PropertyDetailView extends StatelessWidget {
   }
 
   Widget _buildImageCarousel() {
-    if (property.photos.isEmpty) {
+    if (widget.property.photos.isEmpty) {
       return Container(
         height: 250,
         color: Colors.grey[300],
@@ -158,7 +203,7 @@ class PropertyDetailView extends StatelessWidget {
         enlargeCenterPage: true,
         viewportFraction: 1.0,
       ),
-      items: property.photos
+      items: widget.property.photos
           .map((item) => Container(
                 child: Center(
                     child: Image.network(item,

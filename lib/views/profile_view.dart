@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:realestate_app/views/visits/owner_visits_view.dart';
+import 'package:realestate_app/views/profile/user_visit_history_view.dart';
 import '../viewmodels/profile_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../views/visits/my_visits_view.dart';
@@ -268,6 +269,19 @@ class _ProfileViewState extends State<ProfileView>
                           context,
                           MaterialPageRoute(
                               builder: (_) => const OwnerVisitsView()),
+                        );
+                      },
+                    ),
+
+                    ListTile(
+                      leading: const Icon(Icons.history),
+                      title: const Text("Historial de visitas"),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const UserVisitHistoryView()),
                         );
                       },
                     ),
