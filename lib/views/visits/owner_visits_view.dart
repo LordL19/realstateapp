@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/visits_viewmodel.dart';
-import 'package:intl/intl.dart';
 
 class OwnerVisitsView extends StatefulWidget {
   const OwnerVisitsView({super.key});
@@ -11,10 +11,23 @@ class OwnerVisitsView extends StatefulWidget {
 }
 
 class _OwnerVisitsViewState extends State<OwnerVisitsView> {
+  String selectedStatus = 'todas';
+
   @override
   void initState() {
     super.initState();
     Provider.of<VisitViewModel>(context, listen: false).fetchOwnerVisits();
+  }
+
+  Future<void> _changeStatus(
+      BuildContext context, String visitId, String newStatus) async {
+    final vm = context.read<VisitViewModel>();
+    final success = await vm.updateVisitStatus(visitId, newStatus);
+    if (!mounted) return;
+
+    if (success) {
+      await vm.fetchOwnerVisits();
+    }
   }
 
   @override
@@ -22,29 +35,87 @@ class _OwnerVisitsViewState extends State<OwnerVisitsView> {
     final vm = Provider.of<VisitViewModel>(context);
     final dateFormat = DateFormat('dd/MM/yyyy – HH:mm');
 
+    final visits = vm.ownerVisits
+        .where((visit) =>
+            selectedStatus == 'todas' || visit.status == selectedStatus)
+        .toList()
+      ..sort((a, b) => a.requestedDateTime.compareTo(b.requestedDateTime));
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Visitas para mis propiedades")),
+      appBar: AppBar(
+        title: const Text("Visitas para mis propiedades"),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedStatus,
+                icon: const Icon(Icons.filter_list, color: Colors.white),
+                dropdownColor: Colors.white,
+                style: const TextStyle(color: Colors.black),
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedStatus = value;
+                    });
+                  }
+                },
+                items: const [
+                  DropdownMenuItem(value: 'todas', child: Text('Todas')),
+                  DropdownMenuItem(
+                      value: 'pendiente', child: Text('Pendiente')),
+                  DropdownMenuItem(value: 'aceptada', child: Text('Aceptada')),
+                  DropdownMenuItem(
+                      value: 'rechazada', child: Text('Rechazada')),
+                  DropdownMenuItem(
+                      value: 'cancelada', child: Text('Cancelada')),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
       body: vm.isLoading
           ? const Center(child: CircularProgressIndicator())
           : vm.errorMessage != null
               ? Center(child: Text(vm.errorMessage!))
-              : vm.ownerVisits.isEmpty
-                  ? const Center(child: Text("No tienes visitas agendadas."))
+              : visits.isEmpty
+                  ? const Center(child: Text("No hay visitas con ese estado."))
                   : ListView.builder(
-                      itemCount: vm.ownerVisits.length,
+                      itemCount: visits.length,
                       itemBuilder: (context, index) {
-                        final visit = vm.ownerVisits[index];
+                        final visit = visits[index];
                         return Card(
                           margin: const EdgeInsets.symmetric(
                               horizontal: 16, vertical: 8),
                           child: ListTile(
+                            leading: const Icon(Icons.calendar_today),
                             title: Text(
                                 visit.propertyTitle ?? 'Propiedad sin título'),
                             subtitle: Text(
                               '${dateFormat.format(visit.requestedDateTime)}\nEstado: ${visit.status}',
                             ),
                             isThreeLine: true,
-                            leading: const Icon(Icons.calendar_today),
+                            trailing: PopupMenuButton<String>(
+                              icon: const Icon(Icons.more_vert),
+                              onSelected: (value) {
+                                _changeStatus(context, visit.id, value);
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'aceptada',
+                                  child: Text('Aceptar'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'rechazada',
+                                  child: Text('Rechazar'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'cancelada',
+                                  child: Text('Cancelar'),
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },

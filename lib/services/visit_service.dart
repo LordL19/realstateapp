@@ -99,4 +99,18 @@ class VisitService {
       throw Exception('No se pudo actualizar el estado');
     }
   }
+
+  Future<void> cancelVisit(String idVisitRequest) async {
+    final token = await _getToken();
+    final response = await http.put(
+      Uri.parse('$_baseUrl/visits/$idVisitRequest/cancel'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 204) {
+      throw Exception('No se pudo cancelar la visita');
+    }
+  }
 }
