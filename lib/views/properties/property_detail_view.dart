@@ -1,234 +1,242 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-import 'package:provider/provider.dart';
-import 'package:realestate_app/models/create_visit_history_request.dart';
-import 'package:realestate_app/viewmodels/visit_history_viewmodel.dart';
-import 'package:realestate_app/views/properties/property_visit_history_view.dart';
-import 'package:realestate_app/views/visits/property_visits_view.dart';
-import 'package:realestate_app/views/visits/visit_booking_view.dart';
-import '../../models/property.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+
+import '../../models/property.dart';
+import '../../services/user_service.dart';
+import '../../theme/theme.dart';
+import '../../viewmodels/favorite_viewmodel.dart';
+import '../../widgets/properties/hero_carousel.dart';
+import '../../widgets/properties/quick_fact_chip.dart';
+import '../../widgets/properties/static_map_preview.dart';
 
 class PropertyDetailView extends StatefulWidget {
   final Property property;
   final bool isOwner;
-
-  const PropertyDetailView(
-      {super.key, required this.property, required this.isOwner});
+  const PropertyDetailView({
+    super.key,
+    required this.property,
+    required this.isOwner,
+  });
 
   @override
   State<PropertyDetailView> createState() => _PropertyDetailViewState();
 }
 
 class _PropertyDetailViewState extends State<PropertyDetailView> {
+  late Future<String> _listedBy;
+  static const LatLng _fallback = LatLng(-17.7833, -63.1821);
+
   @override
   void initState() {
     super.initState();
-    // Record visit to property when details are viewed
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final visitHistoryVM = Provider.of<VisitHistoryViewModel>(context, listen: false);
-      final request = CreateVisitHistoryRequest(
-        idProperty: widget.property.idProperty,
-        propertyTitle: widget.property.title,
-        propertyType: widget.property.propertyType ?? 'No especificado',
-        transactionType: widget.property.transactionType ?? 'No especificado',
-        city: widget.property.city,
-        country: widget.property.country,
-        ownerId: widget.property.idUser,
-      );
-      visitHistoryVM.recordVisit(request);
-    });
+    final userSvc = context.read<UserService>();
+    _listedBy = userSvc
+        .getUserById(widget.property.idUser)
+        .then((u) => u.email.trim())
+        .catchError((_) => 'Propietario');
+
+    final favVM = context.read<FavoriteViewModel>();
+    if (favVM.state == FavoriteState.initial) favVM.fetchFavorites();
+  }
+
+  Color _statusColor(String status, BuildContext context) {
+    switch (status.toLowerCase()) {
+      case 'activa':
+        return Colors.green;
+      case 'sold':
+        return Colors.red;
+      case 'pending':
+        return Colors.orange;
+      default:
+        return Theme.of(context).colorScheme.onSurfaceVariant;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat =
-        NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
-    final areaFormat = NumberFormat.decimalPattern('es_CO');
+    final p = widget.property;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final currency = NumberFormat.currency(locale: 'es_BO', symbol: '\$');
+    final statusColor = _statusColor(p.status, context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.property.title),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            _buildImageCarousel(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    widget.property.title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.bold),
+    final LatLng coords = (p.latitude != null && p.longitude != null)
+        ? LatLng(p.latitude!, p.longitude!)
+        : _fallback;
+
+    /* -------- placeholder de descripción si viene muy corta -------- */
+    final desc = (p.description ?? '').trim().length < 50
+        ? 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
+            'con espacios amplios y luminosos, acabados de primera calidad y una '
+            'ubicación privilegiada cercana a centros comerciales, parques y '
+            'servicios esenciales. Ideal para familias o profesionales que '
+            'buscan confort y accesibilidad.'
+        : p.description!.trim();
+
+    return Consumer<FavoriteViewModel>(
+      builder: (_, favVM, __) {
+        final isFav = favVM.isFavorite(p.idProperty);
+
+        return FutureBuilder<String>(
+          future: _listedBy,
+          builder: (_, snap) {
+            final listedBy = snap.data ?? 'Publicado por…';
+
+            return Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  /* ---------- HERO ---------- */
+                  HeroCarousel(
+                    photos: p.photos,
+                    listedBy: listedBy,
+                    initiallyFav: isFav,
+                    onBack: () => Navigator.pop(context),
+                    onFavToggle: (v) => favVM.toggleFavorite(p.idProperty),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${widget.property.transactionType} - ${widget.property.propertyType}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: Theme.of(context).primaryColor),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    currencyFormat.format(widget.property.price),
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.green[700], fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(context, Icons.location_on,
-                      '${widget.property.address}, ${widget.property.city}, ${widget.property.country}'),
-                  const SizedBox(height: 16),
-                  Divider(),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Descripción',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.property.description ?? 'No hay descripción disponible.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(height: 1.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Divider(),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Características',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  _buildFeatureChip('Habitaciones',
-                      widget.property.bedrooms.toString(), Icons.king_bed),
-                  _buildFeatureChip(
-                      'Área total',
-                      '${areaFormat.format(widget.property.area)} m²',
-                      Icons.straighten),
-                  _buildFeatureChip(
-                      'Área construida',
-                      '${areaFormat.format(widget.property.builtArea)} m²',
-                      Icons.crop_square),
-                  const SizedBox(height: 16),
-                  Divider(),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(context, Icons.info_outline,
-                      'Estado: ${widget.property.status}'),
-                  if (widget.isOwner) ...[
-                    ListTile(
-                      leading: const Icon(Icons.visibility),
-                      title: const Text("Visitas agendadas"),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => PropertyVisitsView(
-                                    propertyId: widget.property.idProperty,
-                                    propertyTitle: widget.property.title,
-                                  )),
-                        );
-                      },
-                    ),
-                    ListTile(
-                      leading: const Icon(Icons.history),
-                      title: const Text("Historial de visitas"),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => PropertyVisitHistoryView(
-                                    propertyId: widget.property.idProperty,
-                                    propertyTitle: widget.property.title,
-                                  )),
-                        );
-                      },
-                    ),
-                  ],
-                  if (!widget.isOwner)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => VisitBookingView(
-                              propertyId: widget.property.idProperty,
-                              ownerId: widget.property.idUser,
+
+                  /* ---------- CONTENIDO ---------- */
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.xxl, AppSpacing.l, AppSpacing.xxl, 200),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: statusColor,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                p.status[0].toUpperCase() +
+                                    p.status.substring(1),
+                                style: tt.bodyLarge?.copyWith(
+                                    color: statusColor,
+                                    fontWeight: FontWeight.w900),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            currency.format(p.price),
+                            style: GoogleFonts.golosText(
+                              // <-- tu fuente elegida
+                              textStyle: tt.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: cs.primary,
+                              ),
                             ),
                           ),
-                        );
-                      },
-                      icon: const Icon(Icons.calendar_today),
-                      label: const Text('Agendar visita'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        textStyle: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(color: Colors.white),
+                          const SizedBox(height: AppSpacing.xs),
+
+                          /* estimado mensual */
+                          Text(
+                              'Est. ${(p.price / 1716).toStringAsFixed(0)} \$ / mes',
+                              style: tt.bodyMedium),
+                          const SizedBox(height: AppSpacing.s),
+
+                          /* dirección (máx 2 líneas) */
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  '${p.address}',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: tt.bodyMedium,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.m),
+
+                          /* botón pre-aprobación */
+                          OutlinedButton(
+                            onPressed: () {},
+                            child: const Text('Obtén pre-aprobación'),
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+
+                          /* quick facts */
+                          Wrap(
+                            spacing: AppSpacing.s,
+                            runSpacing: AppSpacing.s,
+                            children: [
+                              QuickFactChip(
+                                  icon: Icons.bed, label: '${p.bedrooms} hab.'),
+                              QuickFactChip(
+                                  icon: Icons.square_foot,
+                                  label: '${p.builtArea} m² construidos'),
+                              QuickFactChip(
+                                  icon: Icons.straighten,
+                                  label: '${p.area} m² totales'),
+                              if (p.propertyType != null)
+                                QuickFactChip(
+                                    icon: Icons.home_work_outlined,
+                                    label: p.propertyType!),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.l),
+                          Divider(height: 1, thickness: .7, color: cs.outline),
+                          const SizedBox(height: AppSpacing.l),
+                          Text(desc, style: tt.bodyLarge),
+                          const SizedBox(height: AppSpacing.xl),
+
+                          /* mapa sin encabezado */
+                          StaticMapPreview(latLng: coords),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  Widget _buildImageCarousel() {
-    if (widget.property.photos.isEmpty) {
-      return Container(
-        height: 250,
-        color: Colors.grey[300],
-        child: const Center(
-          child: Icon(Icons.house_outlined, size: 100, color: Colors.grey),
-        ),
-      );
-    }
-    return CarouselSlider(
-      options: CarouselOptions(
-        height: 250.0,
-        autoPlay: true,
-        enlargeCenterPage: true,
-        viewportFraction: 1.0,
-      ),
-      items: widget.property.photos
-          .map((item) => Container(
-                child: Center(
-                    child: Image.network(item,
-                        fit: BoxFit.cover, width: double.infinity)),
-              ))
-          .toList(),
-    );
-  }
-
-  Widget _buildInfoRow(BuildContext context, IconData icon, String text) {
-    return Row(
-      children: <Widget>[
-        Icon(icon, color: Theme.of(context).primaryColor),
-        const SizedBox(width: 16),
-        Expanded(
-            child: Text(text, style: Theme.of(context).textTheme.titleMedium)),
-      ],
-    );
-  }
-
-  Widget _buildFeatureChip(String label, String value, IconData icon) {
-    return Chip(
-      avatar: Icon(icon, size: 18),
-      label: Text('$label: $value'),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              /* ---------- FOOTER ---------- */
+              bottomNavigationBar: Material(
+                color: cs.surface,
+                elevation: 8,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.l),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: widget.isOwner ? null : () {},
+                            child: Text(widget.isOwner
+                                ? 'Ver visitas'
+                                : 'Agendar tour'),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.m),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () {},
+                            child: Text(widget.isOwner
+                                ? 'Editar propiedad'
+                                : 'Contactar agente'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }

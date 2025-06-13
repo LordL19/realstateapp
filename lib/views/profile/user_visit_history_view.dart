@@ -42,7 +42,7 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
           if (visitHistoryVM.errorMessage != null) {
             return Center(child: Text(visitHistoryVM.errorMessage!));
           }
-          
+
           if (visitHistoryVM.userVisitHistory.isEmpty) {
             return const Center(
               child: Text('No has visitado ninguna propiedad todavía.'),
@@ -51,40 +51,49 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
 
           // Get current user info for debugging
           final currentUser = visitHistoryVM.currentUser;
-          debugPrint("Current user in view: ${currentUser?.id ?? 'No user found'}");
-          
+          debugPrint(
+              "Current user in view: ${currentUser?.id ?? 'No user found'}");
+
           // Log visit history items
           for (var visit in visitHistoryVM.userVisitHistory) {
-            debugPrint("Visit property: ${visit.idProperty}, owner: ${visit.ownerId ?? 'unknown'}");
+            debugPrint(
+                "Visit property: ${visit.idProperty}, owner: ${visit.ownerId ?? 'unknown'}");
           }
 
           // Obtener IDs de propiedades propias
-          final ownPropertyIds = propertyVM.myProperties.map((p)=>p.idProperty).toSet();
+          final ownPropertyIds =
+              propertyVM.myProperties.map((p) => p.idProperty).toSet();
 
           // Filtrar historial quitando propiedades propias por ID
-          final filteredHistory = visitHistoryVM.userVisitHistory.where((visit) => !ownPropertyIds.contains(visit.idProperty)).toList();
-          
-          debugPrint("After own ID filter: ${filteredHistory.length} of ${visitHistoryVM.userVisitHistory.length}");
-          
-          if(filteredHistory.isEmpty){
-            return const Center(child: Text('No has visitado propiedades de otros usuarios todavía.'));
+          final filteredHistory = visitHistoryVM.userVisitHistory
+              .where((visit) => !ownPropertyIds.contains(visit.idProperty))
+              .toList();
+
+          debugPrint(
+              "After own ID filter: ${filteredHistory.length} of ${visitHistoryVM.userVisitHistory.length}");
+
+          if (filteredHistory.isEmpty) {
+            return const Center(
+                child: Text(
+                    'No has visitado propiedades de otros usuarios todavía.'));
           }
-          
-          final visitedPropertyIds = filteredHistory.map((v)=>v.idProperty).toSet().toList();
+
+          final visitedPropertyIds =
+              filteredHistory.map((v) => v.idProperty).toSet().toList();
 
           // Filter the main property list
           List<dynamic> visitedItems = [];
-          
+
           // If properties are loaded, use them
           if (propertyVM.properties.isNotEmpty) {
             // Get matching properties
             final matchingProperties = propertyVM.properties
                 .where((p) => visitedPropertyIds.contains(p.idProperty))
                 .toList();
-            
+
             visitedItems = matchingProperties;
           }
-          
+
           // If no properties matched or they're still loading, use visit history
           if (visitedItems.isEmpty) {
             // Fall back to using just the visit history info
@@ -113,7 +122,7 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
               itemCount: visitedItems.length,
               itemBuilder: (context, index) {
                 final item = visitedItems[index];
-                
+
                 if (item is Property) {
                   return _buildPropertyCard(context, item);
                 } else {
@@ -129,7 +138,8 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
   }
 
   Widget _buildPropertyCard(BuildContext context, Property property) {
-    final currencyFormat = NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
+    final currencyFormat =
+        NumberFormat.currency(locale: 'es_CO', symbol: '\$', decimalDigits: 0);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -141,7 +151,8 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
             MaterialPageRoute(
               builder: (context) => PropertyDetailView(
                 property: property,
-                isOwner: false, // Assuming user is not the owner when viewing from history
+                isOwner:
+                    false, // Assuming user is not the owner when viewing from history
               ),
             ),
           );
@@ -242,4 +253,4 @@ class _UserVisitHistoryViewState extends State<UserVisitHistoryView> {
       ),
     );
   }
-} 
+}

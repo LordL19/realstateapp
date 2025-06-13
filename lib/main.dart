@@ -4,8 +4,10 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:realestate_app/config/api_config.dart';
+import 'package:realestate_app/services/user_service.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
+import 'package:realestate_app/viewmodels/favorite_viewmodel.dart';
 import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
 import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 import 'package:realestate_app/viewmodels/visits_viewmodel.dart';
@@ -77,9 +79,14 @@ class _MyAppState extends State<MyApp> {
         providers: [
           ChangeNotifierProvider(create: (_) => AuthViewModel()),
           ChangeNotifierProvider(create: (_) => ProfileViewModel()),
-          ChangeNotifierProvider(create: (_) => PropertyViewModel(client: client.value)),
+          ChangeNotifierProvider(
+              create: (_) => PropertyViewModel(client: client.value)),
           ChangeNotifierProvider(create: (_) => VisitViewModel()),
           ChangeNotifierProvider(create: (_) => VisitHistoryViewModel()),
+          ChangeNotifierProvider(create: (_) => FavoriteViewModel()),
+          Provider(
+            create: (_) => UserService(),
+          ),
         ],
         child: MaterialApp(
           title: 'RealEstate App',
