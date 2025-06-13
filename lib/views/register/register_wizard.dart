@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/models/user_profile.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/viewmodels/auth_viewmodel.dart';
+import 'package:realestate_app/viewmodels/profile_viewmodel.dart';
 import 'package:realestate_app/views/register/steps/register_step_contact.dart';
 import 'package:realestate_app/views/register/steps/register_step_credentials.dart';
 import 'package:realestate_app/views/register/steps/register_step_profile.dart';
 
 class RegisterFormWizard extends StatefulWidget {
-  const RegisterFormWizard({super.key});
+  final UserProfile? profile;
+  const RegisterFormWizard({super.key, this.profile});
 
   @override
   State<RegisterFormWizard> createState() => _RegisterFormWizardState();
@@ -16,6 +19,7 @@ class RegisterFormWizard extends StatefulWidget {
 class _RegisterFormWizardState extends State<RegisterFormWizard> {
   int _step = 0;
   bool _isLoading = false;
+  late final bool _isEditing;
 
   // Controllers compartidos
   final email = TextEditingController();
@@ -24,8 +28,8 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
   final name = TextEditingController();
   final last = TextEditingController();
   final phone = TextEditingController();
-  final city = TextEditingController();
-  final country = TextEditingController();
+  String? _selectedCity;
+  String? _selectedCountry;
 
   // Estados simples
   String gender = 'M';
@@ -34,6 +38,29 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
   // FormKeys
   final _formKeys =
       List<GlobalKey<FormState>>.generate(3, (_) => GlobalKey<FormState>());
+
+  @override
+  void initState() {
+    super.initState();
+    _isEditing = widget.profile != null;
+    if (_isEditing) {
+      final p = widget.profile!;
+      email.text = p.email;
+      name.text = p.firstName;
+      last.text = p.lastName;
+      _selectedCity = p.city;
+      _selectedCountry = p.country;
+      phone.text = p.phoneNumber ?? '';
+      if (p.dateOfBirth != null) {
+        dob = DateTime.tryParse(p.dateOfBirth!);
+      }
+      gender = p.gender ?? 'M';
+
+      // for editing.
+      // Also, when editing we might want to skip the credentials step.
+      _step = 1; // Start from profile section
+    }
+  }
 
   /* ───────── navegación ───────── */
   void _next() {
@@ -68,52 +95,114 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
   }
 
   Future<void> _submit() async {
-    final vm = context.read<AuthViewModel>();
-    final ok = await vm.register(
-      email: email.text.trim(),
-      password: pwd.text.trim(),
-      firstName: name.text.trim(),
-      lastName: last.text.trim(),
-      city: city.text.trim(),
-      country: country.text.trim(),
-      phoneNumber: phone.text.trim(),
-      dateOfBirth: dob!.toIso8601String(),
-      gender: gender,
-    );
+    setState(() => _isLoading = true);
+    if (_isEditing) {
+      final vm = context.read<ProfileViewModel>();
+      final ok = await vm.updateProfile({
+        'firstName': name.text.trim(),
+        'lastName': last.text.trim(),
+        'city': _selectedCity ?? '',
+        'country': _selectedCountry ?? '',
+        'phoneNumber': phone.text.trim(),
+        'dateOfBirth': dob?.toIso8601String(),
+        'gender': gender,
+      });
+      setState(() => _isLoading = false);
+      _showMsg(ok ? 'Perfil actualizado' : vm.errorMessage ?? 'Error',
+          error: !ok);
+      if (ok && mounted) Navigator.pop(context);
+    } else {
+      final vm = context.read<AuthViewModel>();
+      final ok = await vm.register(
+        email: email.text.trim(),
+        password: pwd.text.trim(),
+        firstName: name.text.trim(),
+        lastName: last.text.trim(),
+        city: _selectedCity ?? '',
+        country: _selectedCountry ?? '',
+        phoneNumber: phone.text.trim(),
+        dateOfBirth: dob!.toIso8601String(),
+        gender: gender,
+      );
 
-    setState(() => _isLoading = false);
+      setState(() => _isLoading = false);
 
-    _showMsg(ok ? 'Registro exitoso' : vm.errorMessage ?? 'Error', error: !ok);
-    if (ok && mounted) Navigator.pop(context);
+      _showMsg(ok ? 'Registro exitoso' : vm.errorMessage ?? 'Error',
+          error: !ok);
+      if (ok && mounted) Navigator.pop(context);
+    }
   }
 
   /* ───────── build ───────── */
   @override
   Widget build(BuildContext context) {
-    const stepLabels = ['Cuenta', 'Perfil', 'Contacto'];
-    final pages = [
-      CredentialsSection(
-        formKey: _formKeys[0],
-        email: email,
-        pwd: pwd,
-        pwd2: pwd2,
-      ),
-      ProfileSection(
-        formKey: _formKeys[1],
-        name: name,
-        last: last,
-        gender: gender,
-        onGenderChanged: (v) => setState(() => gender = v),
-        dob: dob,
-        onPickDate: _pickDate,
-      ),
-      ContactSection(
-        formKey: _formKeys[2],
-        phone: phone,
-        city: city,
-        country: country,
-      ),
-    ];
+    final stepLabels = _isEditing
+        ? ['Perfil', 'Contacto']
+        : ['Cuenta', 'Perfil', 'Contacto'];
+
+    final pages = _isEditing
+        ? [
+            ProfileSection(
+              formKey: _formKeys[1],
+              name: name,
+              last: last,
+              gender: gender,
+              onGenderChanged: (v) => setState(() => gender = v),
+              dob: dob,
+              onPickDate: _pickDate,
+            ),
+            ContactSection(
+              formKey: _formKeys[2],
+              phone: phone,
+              city: _selectedCity,
+              country: _selectedCountry,
+              onCountryChanged: (value) {
+                setState(() {
+                  _selectedCountry = value;
+                  _selectedCity = null;
+                });
+              },
+              onCityChanged: (value) {
+                setState(() {
+                  _selectedCity = value;
+                });
+              },
+            ),
+          ]
+        : [
+            CredentialsSection(
+              formKey: _formKeys[0],
+              email: email,
+              pwd: pwd,
+              pwd2: pwd2,
+            ),
+            ProfileSection(
+              formKey: _formKeys[1],
+              name: name,
+              last: last,
+              gender: gender,
+              onGenderChanged: (v) => setState(() => gender = v),
+              dob: dob,
+              onPickDate: _pickDate,
+            ),
+            ContactSection(
+              formKey: _formKeys[2],
+              phone: phone,
+              city: _selectedCity,
+              country: _selectedCountry,
+              onCountryChanged: (value) {
+                setState(() {
+                  _selectedCountry = value;
+                  _selectedCity = null;
+                });
+              },
+              onCityChanged: (value) {
+                setState(() {
+                  _selectedCity = value;
+                });
+              },
+            ),
+          ];
 
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
@@ -121,7 +210,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
     return Scaffold(
       appBar: AppBar(
           title: Text(
-            'Registrarse',
+            _isEditing ? 'Editar Perfil' : 'Registrarse',
             style: tt.headlineSmall!.copyWith(fontWeight: FontWeight.w600),
           ),
           elevation: 0),
@@ -138,7 +227,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
               ),
               child: Row(
                 children: List.generate(stepLabels.length, (i) {
-                  final selected = i == _step;
+                  final selected = i == _step - (_isEditing ? 1 : 0);
                   return Expanded(
                     child: Column(
                       children: [
@@ -146,7 +235,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
                           height: 4,
                           margin: const EdgeInsets.symmetric(
                               horizontal: AppSpacing.xs),
-                          color: i <= _step
+                          color: i <= _step - (_isEditing ? 1 : 0)
                               ? cs.primary
                               : cs.surfaceContainerHighest,
                         ),
@@ -171,7 +260,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.only(bottom: AppSpacing.l),
-                child: pages[_step],
+                child: pages[_isEditing ? _step - 1 : _step],
               ),
             ),
           ],
@@ -189,7 +278,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
           ),
           child: Row(
             children: [
-              if (_step > 0)
+              if (_step > (_isEditing ? 1 : 0))
                 FilledButton.tonalIcon(
                   onPressed: _isLoading ? null : _back,
                   icon: const Icon(Icons.arrow_back),
@@ -197,7 +286,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
                   style:
                       FilledButton.styleFrom(minimumSize: const Size(120, 48)),
                 ),
-              if (_step == 0) const SizedBox(width: 120),
+              if (_step == (_isEditing ? 1 : 0)) const SizedBox(width: 120),
               const Spacer(),
               SizedBox(
                 width: 140,
@@ -209,7 +298,9 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
                         icon: Icon(
                           _step == 2 ? Icons.check : Icons.arrow_forward,
                         ),
-                        label: Text(_step == 2 ? 'Registrar' : 'Siguiente'),
+                        label: Text(_step == 2
+                            ? (_isEditing ? 'Guardar Cambios' : 'Registrar')
+                            : 'Siguiente'),
                       ),
               ),
             ],
@@ -221,7 +312,7 @@ class _RegisterFormWizardState extends State<RegisterFormWizard> {
 
   @override
   void dispose() {
-    for (final c in [email, pwd, pwd2, name, last, phone, city, country]) {
+    for (final c in [email, pwd, pwd2, name, last, phone]) {
       c.dispose();
     }
     super.dispose();

@@ -44,6 +44,34 @@ class ProfileService {
     }
   }
 
+  Future<bool> updateProfile(Map<String, dynamic> profileData) async {
+    try {
+      final token = await storage.read(key: 'jwt');
+      if (token == null) return false;
+
+      final response = await _client
+          .put(
+            Uri.parse('$_baseUrl/user/profile'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Content-Type': 'application/json; charset=UTF-8',
+              'Accept': 'application/json',
+            },
+            body: jsonEncode(profileData),
+          )
+          .timeout(_timeout);
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } on TimeoutException {
+      throw Exception('Tiempo de espera agotado');
+    } catch (e) {
+      throw Exception('Error al actualizar perfil: ${e.toString()}');
+    }
+  }
+
   void dispose() {
     _client.close();
   }

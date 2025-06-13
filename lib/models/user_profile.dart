@@ -5,6 +5,9 @@ class UserProfile {
   final String lastName;
   final String city;
   final String country;
+  final String? phoneNumber;
+  final String? dateOfBirth;
+  final String? gender;
 
   const UserProfile({
     required this.idUser,
@@ -13,6 +16,9 @@ class UserProfile {
     required this.lastName,
     required this.city,
     required this.country,
+    this.phoneNumber,
+    this.dateOfBirth,
+    this.gender,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -23,6 +29,9 @@ class UserProfile {
       lastName: json['lastName'] ?? '',
       city: json['city'] ?? '',
       country: json['country'] ?? '',
+      phoneNumber: json['phoneNumber'],
+      dateOfBirth: json['dateOfBirth'],
+      gender: json['gender'],
     );
   }
 
@@ -34,6 +43,9 @@ class UserProfile {
       'lastName': lastName,
       'city': city,
       'country': country,
+      'phoneNumber': phoneNumber,
+      'dateOfBirth': dateOfBirth,
+      'gender': gender,
     };
   }
 }
