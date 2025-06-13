@@ -5,6 +5,7 @@ import '../models/property.dart';
 import '../services/property_service.dart';
 
 enum PropertyState { initial, loading, loaded, error }
+
 enum PropertyFormStatus { initial, loading, success, error }
 
 class PropertyViewModel extends ChangeNotifier {
@@ -32,7 +33,9 @@ class PropertyViewModel extends ChangeNotifier {
   List<Property> get publicProperties {
     if (myProperties.isEmpty) return _properties;
     final myPropertiesIds = _myProperties.map((p) => p.idProperty).toSet();
-    return _properties.where((p) => !myPropertiesIds.contains(p.idProperty)).toList();
+    return _properties
+        .where((p) => !myPropertiesIds.contains(p.idProperty))
+        .toList();
   }
 
   String? _errorMessage;
@@ -45,7 +48,7 @@ class PropertyViewModel extends ChangeNotifier {
   int? _minBedrooms;
   int? _minTotalArea;
   int? _minBuiltArea;
-  
+
   // Nuevos filtros
   String? _selectedCountry;
   String? _selectedCity;
@@ -62,6 +65,23 @@ class PropertyViewModel extends ChangeNotifier {
   String? get selectedCity => _selectedCity;
   double? get minPrice => _minPrice;
   double? get maxPrice => _maxPrice;
+
+  /// Indica si alguno de los filtros está activo
+  bool get hasActiveFilters =>
+      // texto de búsqueda
+      (_searchQuery?.isNotEmpty ?? false) ||
+      // tipo de propiedad
+      _selectedPropertyType != null ||
+      // dormitorios / áreas
+      (_minBedrooms != null && _minBedrooms! > 0) ||
+      (_minTotalArea != null && _minTotalArea! > 0) ||
+      (_minBuiltArea != null && _minBuiltArea! > 0) ||
+      // país / ciudad
+      _selectedCountry != null ||
+      _selectedCity != null ||
+      // rango de precios
+      (_minPrice != null && _minPrice! > 0) ||
+      (_maxPrice != null && _maxPrice! > 0);
 
   // Lista de países y ciudades como en property_form_view
   final List<String> countries = [
@@ -95,6 +115,8 @@ class PropertyViewModel extends ChangeNotifier {
     return citiesByCountry[country] ?? [];
   }
 
+  void refresh() => notifyListeners();
+
   void updateSearchQuery(String? query) {
     _searchQuery = query;
     notifyListeners();
@@ -124,7 +146,7 @@ class PropertyViewModel extends ChangeNotifier {
     _minBuiltArea = int.tryParse(value ?? '');
     notifyListeners();
   }
-  
+
   void updateCountry(String? country) {
     _selectedCountry = country;
     // Si cambia el país, reseteamos la ciudad
@@ -136,17 +158,17 @@ class PropertyViewModel extends ChangeNotifier {
     }
     notifyListeners();
   }
-  
+
   void updateCity(String? city) {
     _selectedCity = city;
     notifyListeners();
   }
-  
+
   void updateMinPrice(String? value) {
     _minPrice = double.tryParse(value ?? '');
     notifyListeners();
   }
-  
+
   void updateMaxPrice(String? value) {
     _maxPrice = double.tryParse(value ?? '');
     notifyListeners();
@@ -170,40 +192,50 @@ class PropertyViewModel extends ChangeNotifier {
     List<Property> filtered = List.from(properties);
 
     if (_selectedPropertyType != null && _selectedPropertyType!.isNotEmpty) {
-      filtered = filtered.where((p) => p.propertyType == _selectedPropertyType).toList();
+      filtered = filtered
+          .where((p) => p.propertyType == _selectedPropertyType)
+          .toList();
     }
 
     if (_searchQuery != null && _searchQuery!.isNotEmpty) {
       final query = _searchQuery!.toLowerCase();
       switch (_searchType) {
         case 'Nombre':
-          filtered = filtered.where((p) => p.title.toLowerCase().contains(query)).toList();
+          filtered = filtered
+              .where((p) => p.title.toLowerCase().contains(query))
+              .toList();
           break;
         case 'Zona':
-          filtered = filtered.where((p) =>
-              (p.address?.toLowerCase().contains(query) ?? false) ||
-              p.city.toLowerCase().contains(query) ||
-              p.country.toLowerCase().contains(query)).toList();
+          filtered = filtered
+              .where((p) =>
+                  (p.address?.toLowerCase().contains(query) ?? false) ||
+                  p.city.toLowerCase().contains(query) ||
+                  p.country.toLowerCase().contains(query))
+              .toList();
           break;
         case 'País':
-          filtered = filtered.where((p) => p.country.toLowerCase().contains(query)).toList();
+          filtered = filtered
+              .where((p) => p.country.toLowerCase().contains(query))
+              .toList();
           break;
         case 'Ciudad':
-          filtered = filtered.where((p) => p.city.toLowerCase().contains(query)).toList();
+          filtered = filtered
+              .where((p) => p.city.toLowerCase().contains(query))
+              .toList();
           break;
       }
     }
-    
+
     // Filtro por país y ciudad
     if (_selectedCountry != null && _selectedCountry!.isNotEmpty) {
       filtered = filtered.where((p) => p.country == _selectedCountry).toList();
-      
+
       // Sólo filtramos por ciudad si hay un país seleccionado
       if (_selectedCity != null && _selectedCity!.isNotEmpty) {
         filtered = filtered.where((p) => p.city == _selectedCity).toList();
       }
     }
-    
+
     // Filtro por rango de precios
     if (_minPrice != null && _minPrice! > 0) {
       filtered = filtered.where((p) => p.price >= _minPrice!).toList();
@@ -234,7 +266,7 @@ class PropertyViewModel extends ChangeNotifier {
       // Cargar todas las propiedades primero
       _properties = await _propertyService.getProperties();
       _state = PropertyState.loaded;
-      
+
       // Luego cargar mis propiedades usando la nueva lógica
       await fetchMyProperties();
     } catch (e) {
@@ -254,23 +286,29 @@ class PropertyViewModel extends ChangeNotifier {
         // Cargar propiedades si aún no están cargadas
         _properties = await _propertyService.getProperties();
       }
-      
+
       // Obtener solo los IDs y datos mínimos de mis propiedades
       final myPropertiesMinimal = await _propertyService.getMyProperties();
-      
+
       // Crear un conjunto de IDs de mis propiedades
-      final myPropertyIds = myPropertiesMinimal.map((p) => p.idProperty).toSet();
-      
+      final myPropertyIds =
+          myPropertiesMinimal.map((p) => p.idProperty).toSet();
+
       // Obtener propiedades completas del listado general
-      final completeProperties = _properties.where((p) => myPropertyIds.contains(p.idProperty)).toList();
-      
+      final completeProperties = _properties
+          .where((p) => myPropertyIds.contains(p.idProperty))
+          .toList();
+
       // Si algunas propiedades del usuario no están en la lista general, usar la versión mínima
-      final completePropertyIds = completeProperties.map((p) => p.idProperty).toSet();
-      final missingProperties = myPropertiesMinimal.where((p) => !completePropertyIds.contains(p.idProperty)).toList();
-      
+      final completePropertyIds =
+          completeProperties.map((p) => p.idProperty).toSet();
+      final missingProperties = myPropertiesMinimal
+          .where((p) => !completePropertyIds.contains(p.idProperty))
+          .toList();
+
       // Combinar propiedades completas con las faltantes
       _myProperties = [...completeProperties, ...missingProperties];
-      
+
       // Ordenar por fecha de actualización para mantener consistencia
       _myProperties.sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
@@ -328,7 +366,8 @@ class PropertyViewModel extends ChangeNotifier {
         // After successful update, reload properties from server to get fresh data
         await fetchProperties();
       }
-      _formState = success ? PropertyFormStatus.success : PropertyFormStatus.error;
+      _formState =
+          success ? PropertyFormStatus.success : PropertyFormStatus.error;
       notifyListeners();
       return success;
     } catch (e) {
@@ -342,4 +381,4 @@ class PropertyViewModel extends ChangeNotifier {
   void resetFormState() {
     _formState = PropertyFormStatus.initial;
   }
-} 
+}
