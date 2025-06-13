@@ -217,9 +217,9 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                       children: [
                         Expanded(
                           child: widget.isOwner
-                              ? ElevatedButton(
+                              ? const ElevatedButton(
                                   onPressed: null, // Deshabilitado
-                                  child: const Text('Ver visitas'),
+                                  child: Text('Ver visitas'),
                                 )
                               : ElevatedButton(
                                   onPressed: () {
@@ -245,8 +245,10 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (_) => ChangeNotifierProvider.value(
-                                          value: context.read<PropertyViewModel>(),
+                                        builder: (_) =>
+                                            ChangeNotifierProvider.value(
+                                          value:
+                                              context.read<PropertyViewModel>(),
                                           child: PublishWizard(property: p),
                                         ),
                                       ),
@@ -254,9 +256,9 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                   },
                                   child: const Text('Editar propiedad'),
                                 )
-                              : OutlinedButton(
+                              : const OutlinedButton(
                                   onPressed: null, // Sin función por ahora
-                                  child: const Text('Contactar agente'),
+                                  child: Text('Contactar agente'),
                                 ),
                         ),
                       ],
