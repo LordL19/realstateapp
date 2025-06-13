@@ -22,6 +22,26 @@ class MyPropertiesListView extends StatelessWidget {
     final List<Property> filtered = vm.applyFilters(vm.myProperties);
 
     return Scaffold(
+      // tell the scaffold to float the FAB
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: SafeArea(
+        top: false, // don’t add padding at the top
+        bottom: true, // respect the safe-area at the bottom
+        child: Padding(
+          // extra bottom padding to clear the floating bottom bar
+          padding: const EdgeInsets.only(bottom: 80.0),
+          child: FloatingActionButton(
+            heroTag: 'fab_my_properties_list',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const PublishWizard()),
+            ),
+            backgroundColor: cs.primary,
+            child: Icon(Icons.add, color: cs.onPrimary),
+          ),
+        ),
+      ),
+
       body: SafeArea(
         child: Column(
           children: [
@@ -44,13 +64,11 @@ class MyPropertiesListView extends StatelessWidget {
             ),
 
             // ---------- Barra de búsqueda / filtros ----------
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
               child: SearchFilterBar(
                 hasFilters: vm.hasActiveFilters,
                 onTap: () async {
-                  // Abrimos el modal **inyectando** el mismo ViewModel
                   await showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -59,12 +77,10 @@ class MyPropertiesListView extends StatelessWidget {
                       child: const PropertyFilterSheet(),
                     ),
                   );
-                  // Al cerrarse obligamos a redibujar
-                  vm.refresh();
+                  vm.refresh(); // force rebuild after sheet closes
                 },
               ),
             ),
-
             const SizedBox(height: AppSpacing.l),
 
             // ---------- Contenido ----------
@@ -75,9 +91,7 @@ class MyPropertiesListView extends StatelessWidget {
                     case PropertyState.loading:
                       return const Center(child: CircularProgressIndicator());
                     case PropertyState.error:
-                      return Center(
-                        child: Text('Error: ${vm.errorMessage}'),
-                      );
+                      return Center(child: Text('Error: ${vm.errorMessage}'));
                     case PropertyState.loaded:
                       if (filtered.isEmpty) {
                         return Column(
@@ -89,8 +103,10 @@ class MyPropertiesListView extends StatelessWidget {
                               repeat: false,
                             ),
                             const SizedBox(height: AppSpacing.m),
-                            Text('Aún no has publicado propiedades',
-                                style: Theme.of(context).textTheme.titleMedium),
+                            Text(
+                              'Aún no has publicado propiedades',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                           ],
                         );
                       }
@@ -118,7 +134,6 @@ class MyPropertiesListView extends StatelessWidget {
                           ),
                         ),
                       );
-
                     default:
                       return const SizedBox.shrink();
                   }
@@ -126,20 +141,6 @@ class MyPropertiesListView extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-
-      // ---------- FAB ----------
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'fab_my_properties_list',
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PublishWizard()),
-        ),
-        backgroundColor: cs.primary,
-        child: Icon(
-          Icons.add,
-          color: cs.onPrimary,
         ),
       ),
     );
