@@ -6,6 +6,7 @@ import '../viewmodels/profile_viewmodel.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../views/visits/my_visits_view.dart';
 import 'login_view.dart';
+import 'register/register_wizard.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({Key? key}) : super(key: key);
@@ -77,6 +78,20 @@ class _ProfileViewState extends State<ProfileView>
           elevation: 0,
           automaticallyImplyLeading: false,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () {
+                final profile = context.read<ProfileViewModel>().profile;
+                if (profile != null) {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RegisterFormWizard(profile: profile),
+                    ),
+                  );
+                }
+              },
+              tooltip: 'Editar perfil',
+            ),
             IconButton(
               icon: const Icon(Icons.refresh),
               onPressed: _refreshProfile,
@@ -272,41 +287,11 @@ class _ProfileViewState extends State<ProfileView>
                         );
                       },
                     ),
-
-                    ListTile(
-                      leading: const Icon(Icons.history),
-                      title: const Text("Historial de visitas"),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const UserVisitHistoryView()),
-                        );
-                      },
-                    ),
-
                     const SizedBox(height: 16),
 
                     const SizedBox(height: 32),
 
                     // Botón de logout
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        onPressed: _logout,
-                        icon: const Icon(Icons.logout),
-                        label: const Text("Cerrar Sesión"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red,
-                          foregroundColor: const Color.fromARGB(249, 255, 255, 255),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),

@@ -55,6 +55,25 @@ class ProfileViewModel extends ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(Map<String, dynamic> profileData) async {
+    _setLoading(true);
+    _setError(null);
+    try {
+      final success = await _profileService.updateProfile(profileData);
+      if (success) {
+        await fetchProfile(); // Refresh profile data
+      } else {
+        _setError('Error al actualizar el perfil.');
+      }
+      return success;
+    } catch (e) {
+      _setError(e.toString());
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void clearProfile() {
     _profile = null;
     _errorMessage = null;

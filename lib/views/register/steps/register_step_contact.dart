@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:realestate_app/theme/theme.dart';
 import 'package:realestate_app/widgets/shared/app_text_field.dart';
+import 'package:provider/provider.dart';
+import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 
 class ContactSection extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController phone, city, country;
+  final TextEditingController phone;
+  final String? city;
+  final String? country;
+  final ValueChanged<String?> onCountryChanged;
+  final ValueChanged<String?> onCityChanged;
 
   const ContactSection({
     super.key,
@@ -12,6 +18,8 @@ class ContactSection extends StatelessWidget {
     required this.phone,
     required this.city,
     required this.country,
+    required this.onCountryChanged,
+    required this.onCityChanged,
   });
 
   @override
@@ -43,16 +51,51 @@ class ContactSection extends StatelessWidget {
               validator: (v) => v!.isEmpty ? 'Requerido' : null,
             ),
             const SizedBox(height: AppSpacing.m),
-            AppTextField(
-              controller: city,
-              label: 'Ciudad',
-              icon: Icons.location_city,
+            Consumer<PropertyViewModel>(
+              builder: (context, propertyViewModel, child) {
+                return DropdownButtonFormField<String>(
+                  value: country,
+                  decoration: const InputDecoration(
+                    labelText: 'País',
+                    prefixIcon: Icon(Icons.flag),
+                    border: OutlineInputBorder(),
+                  ),
+                  items: propertyViewModel.countries.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: onCountryChanged,
+                  validator: (v) => v == null ? 'Requerido' : null,
+                );
+              },
             ),
             const SizedBox(height: AppSpacing.m),
-            AppTextField(
-              controller: country,
-              label: 'País',
-              icon: Icons.flag,
+            Consumer<PropertyViewModel>(
+              builder: (context, propertyViewModel, child) {
+                final cities = country != null
+                    ? propertyViewModel.getCitiesForCountry(country)
+                    : <String>[];
+                return DropdownButtonFormField<String>(
+                  value: city,
+                  decoration: InputDecoration(
+                    labelText: 'Ciudad',
+                    prefixIcon: const Icon(Icons.location_city),
+                    border: const OutlineInputBorder(),
+                    // Si no hay país seleccionado, deshabilitamos el campo
+                    enabled: country != null && cities.isNotEmpty,
+                  ),
+                  items: cities.map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                  onChanged: onCityChanged,
+                  validator: (v) => v == null ? 'Requerido' : null,
+                );
+              },
             ),
           ],
         ),
