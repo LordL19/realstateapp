@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
 import '../../models/create_property_input.dart';
+import '../../models/property.dart';
 import '../../models/review_mode.dart';
 import '../../theme/theme.dart';
 import '../../viewmodels/property_viewmodel.dart';
@@ -15,23 +16,24 @@ import 'steps/step_gallery.dart';
 import 'steps/step_review.dart';
 
 class PublishWizard extends StatefulWidget {
-  const PublishWizard({super.key});
+  /// Si [property] es `null` el wizard crea, si no, edita.
+  final Property? property;
+  const PublishWizard({super.key, this.property});
+
   @override
   State<PublishWizard> createState() => _PublishWizardState();
 }
 
 class _PublishWizardState extends State<PublishWizard> {
-  /* ────────────────  PASO 0  ───────────────────────────── */
+  /* ────────────────  controladores  ──────────────── */
   final titleCtrl = TextEditingController();
   final descCtrl = TextEditingController();
   String? propertyType, transactionType;
 
-  /* ────────────────  PASO 1  ───────────────────────────── */
   String? country, city;
   final addressCtrl = TextEditingController();
-  LatLng? latlng; // coordenadas elegidas en el mapa
+  LatLng? latlng;
 
-  /* ────────────────  PASO 2  ───────────────────────────── */
   final priceCtrl = TextEditingController();
   final areaCtrl = TextEditingController();
   final builtAreaCtrl = TextEditingController();
@@ -39,20 +41,54 @@ class _PublishWizardState extends State<PublishWizard> {
   double? price;
   int? area, builtArea;
 
-  /* ────────────────  PASO 3  ───────────────────────────── */
   List<String> photoUrls = [];
 
-  /* ────────────────  STATE  ────────────────────────────── */
+  /* ────────────────  STATE  ──────────────── */
+  final _keys = List.generate(5, (_) => GlobalKey<FormState>());
   int _step = 0;
   bool _loading = false;
-  final _keys = List.generate(5, (_) => GlobalKey<FormState>());
 
-  /* ────────────  VALIDACIÓN / NAVEGACIÓN  ──────────────── */
+  bool get _isEdit => widget.property != null;
+  Property get _prop => widget.property!;
+
+  /* ────────────────  INIT  ──────────────── */
+  @override
+  void initState() {
+    super.initState();
+    if (_isEdit) _hydrateFromProperty();
+  }
+
+  void _hydrateFromProperty() {
+    titleCtrl.text = _prop.title;
+    descCtrl.text = _prop.description ?? '';
+    propertyType = _prop.propertyType;
+    transactionType = _prop.transactionType;
+
+    country = _prop.country;
+    city = _prop.city;
+    addressCtrl.text = _prop.address ?? '';
+
+    priceCtrl.text = _prop.price.toStringAsFixed(0);
+    areaCtrl.text = _prop.area.toString();
+    builtAreaCtrl.text = _prop.builtArea.toString();
+    bedrooms = _prop.bedrooms;
+
+    price = _prop.price;
+    area = _prop.area;
+    builtArea = _prop.builtArea;
+
+    photoUrls = List.from(_prop.photos);
+
+    if (_prop.latitude != null && _prop.longitude != null) {
+      latlng = LatLng(_prop.latitude!, _prop.longitude!);
+    }
+  }
+
+  /* ────────────────  NAVEGACIÓN  ──────────────── */
   void _next() async {
     // valida solo si el paso actual tiene Form
     if (_keys[_step].currentState?.validate() == false) return;
 
-    // reglas adicionales por paso
     switch (_step) {
       case 1: // Ubicación
         if (latlng == null) {
@@ -82,18 +118,12 @@ class _PublishWizardState extends State<PublishWizard> {
         await _submit();
         return;
     }
-
     setState(() => _step++);
   }
 
   void _back() => setState(() => _step = _step > 0 ? _step - 1 : 0);
 
-  void _snack(String m, {bool error = false}) =>
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(m), backgroundColor: error ? Colors.red : null),
-      );
-
-  /* ──────────────────  SUBMIT  ─────────────────────────── */
+  /* ────────────────  SUBMIT  ──────────────── */
   Future<void> _submit() async {
     setState(() => _loading = true);
 
@@ -110,18 +140,21 @@ class _PublishWizardState extends State<PublishWizard> {
       builtArea: builtArea!,
       bedrooms: bedrooms!,
       photos: photoUrls,
-      latitude: latlng!.latitude, // campos UI-only
+      latitude: latlng!.latitude,
       longitude: latlng!.longitude,
     );
 
-    final ok = await context.read<PropertyViewModel>().createProperty(input);
+    final vm = context.read<PropertyViewModel>();
+    final ok = _isEdit
+        ? await vm.updateProperty(_prop.idProperty, input)
+        : await vm.createProperty(input);
 
     setState(() => _loading = false);
-    _snack(ok ? 'Propiedad publicada' : 'Error al publicar', error: !ok);
+    _snack(ok ? 'Guardado' : 'Error al guardar', error: !ok);
     if (ok && mounted) Navigator.pop(context);
   }
 
-  /* ───────────────────  UI  ────────────────────────────── */
+  /* ────────────────  UI  ──────────────── */
   @override
   Widget build(BuildContext context) {
     final pages = [
@@ -131,6 +164,8 @@ class _PublishWizardState extends State<PublishWizard> {
         descCtrl: descCtrl,
         onTypeChanged: (v) => propertyType = v,
         onTransactionChanged: (v) => transactionType = v,
+        initialType: propertyType,
+        initialTxn: transactionType,
       ),
       StepLocation(
         formKey: _keys[1],
@@ -143,6 +178,7 @@ class _PublishWizardState extends State<PublishWizard> {
         }),
         onCityChanged: (c) => setState(() => city = c),
         onLocationSelected: (p) => latlng = p,
+        initialLatLng: latlng,
       ),
       StepFeatures(
         formKey: _keys[2],
@@ -196,10 +232,10 @@ class _PublishWizardState extends State<PublishWizard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_step == 0) // ← SOLO en el primer paso
+                  if (_step == 0)
                     CircleAvatar(
                       child: IconButton(
-                        icon: const Icon(Icons.close), // cerrar wizard
+                        icon: const Icon(Icons.close),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -243,9 +279,8 @@ class _PublishWizardState extends State<PublishWizard> {
                   onPressed: _loading ? null : _back,
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Atrás'),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(120, 48),
-                  ),
+                  style:
+                      FilledButton.styleFrom(minimumSize: const Size(120, 48)),
                 ),
               if (_step == 0) const SizedBox(width: 120),
               const Spacer(),
@@ -254,13 +289,13 @@ class _PublishWizardState extends State<PublishWizard> {
                 height: 48,
                 child: _loading
                     ? const Center(child: CircularProgressIndicator())
-                    : FilledButton.icon(
+                    : ElevatedButton.icon(
                         onPressed: _next,
                         icon: Icon(_step == pages.length - 1
                             ? Icons.check
                             : Icons.arrow_forward),
                         label: Text(_step == pages.length - 1
-                            ? 'Publicar'
+                            ? (_isEdit ? 'Guardar' : 'Publicar')
                             : 'Siguiente'),
                       ),
               ),
@@ -270,6 +305,13 @@ class _PublishWizardState extends State<PublishWizard> {
       ),
     );
   }
+
+  /* -------- snack helper -------- */
+  void _snack(String m, {bool error = false}) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(m),
+        backgroundColor: error ? Colors.red : null,
+      ));
 
   @override
   void dispose() {
