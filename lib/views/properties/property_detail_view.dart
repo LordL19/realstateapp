@@ -11,6 +11,10 @@ import '../../viewmodels/favorite_viewmodel.dart';
 import '../../widgets/properties/hero_carousel.dart';
 import '../../widgets/properties/quick_fact_chip.dart';
 import '../../widgets/properties/static_map_preview.dart';
+import 'package:realestate_app/views/publish_property/publish_wizard.dart';
+import 'package:realestate_app/views/visits/visit_booking_view.dart';
+import '../../viewmodels/visits_viewmodel.dart';
+import '../../viewmodels/property_viewmodel.dart';
 
 class PropertyDetailView extends StatefulWidget {
   final Property property;
@@ -212,21 +216,48 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton(
-                            onPressed: widget.isOwner ? null : () {},
-                            child: Text(widget.isOwner
-                                ? 'Ver visitas'
-                                : 'Agendar tour'),
-                          ),
+                          child: widget.isOwner
+                              ? ElevatedButton(
+                                  onPressed: null, // Deshabilitado
+                                  child: const Text('Ver visitas'),
+                                )
+                              : ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider(
+                                          create: (_) => VisitViewModel(),
+                                          child: VisitBookingView(
+                                            propertyId: p.idProperty,
+                                            ownerId: p.idUser,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Agendar tour'),
+                                ),
                         ),
                         const SizedBox(width: AppSpacing.m),
                         Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {},
-                            child: Text(widget.isOwner
-                                ? 'Editar propiedad'
-                                : 'Contactar agente'),
-                          ),
+                          child: widget.isOwner
+                              ? OutlinedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider.value(
+                                          value: context.read<PropertyViewModel>(),
+                                          child: PublishWizard(property: p),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Editar propiedad'),
+                                )
+                              : OutlinedButton(
+                                  onPressed: null, // Sin función por ahora
+                                  child: const Text('Contactar agente'),
+                                ),
                         ),
                       ],
                     ),
