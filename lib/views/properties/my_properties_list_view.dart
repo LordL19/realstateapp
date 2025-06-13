@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:realestate_app/views/properties/property_visit_history_view.dart';
 import 'package:realestate_app/views/publish_property/publish_wizard.dart';
 import '../../viewmodels/property_viewmodel.dart';
-import 'property_form_view.dart';
 import 'property_detail_view.dart';
 import '../../widgets/property_filter_header.dart';
 
 class MyPropertiesListView extends StatelessWidget {
-  const MyPropertiesListView({Key? key}) : super(key: key);
+  const MyPropertiesListView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -84,7 +82,7 @@ class MyPropertiesListView extends StatelessWidget {
                                               builder: (_) =>
                                                   ChangeNotifierProvider.value(
                                                 value: viewModel,
-                                                child: PropertyFormView(
+                                                child: PublishWizard(
                                                     property: property),
                                               ),
                                             ),
@@ -125,6 +123,7 @@ class MyPropertiesListView extends StatelessWidget {
     );
   }
 
+  // ignore: unused_element
   void _showDeleteConfirmation(
       BuildContext context, PropertyViewModel viewModel, String propertyId) {
     showDialog(

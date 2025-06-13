@@ -17,6 +17,9 @@ class StepLocation extends StatefulWidget {
   final ValueChanged<String?> onCityChanged;
   final ValueChanged<LatLng>? onLocationSelected;
 
+  /// ← NUEVO: coordenada opcional al inicializar (por ejemplo, en edición)
+  final LatLng? initialLatLng;
+
   const StepLocation({
     super.key,
     required this.formKey,
@@ -26,6 +29,7 @@ class StepLocation extends StatefulWidget {
     required this.onCountryChanged,
     required this.onCityChanged,
     this.onLocationSelected,
+    this.initialLatLng, // ← añadido
   });
 
   @override
@@ -34,6 +38,7 @@ class StepLocation extends StatefulWidget {
 
 class _StepLocationState extends State<StepLocation> {
   static const _initialCenter = LatLng(-17.7833, -63.1821);
+
   LatLng? _picked;
   bool _geoLoading = false;
 
@@ -41,11 +46,23 @@ class _StepLocationState extends State<StepLocation> {
       'pk.eyJ1IjoiZGllZ29hcHYxMiIsImEiOiJjbWJzdGlwN2YwN3JhMmxxMHBpMTFvaW0wIn0.1GSG6G2_uKkDEqCnnnyxuQ';
   final _styleId = 'mapbox/streets-v11';
 
+  @override
+  void initState() {
+    super.initState();
+    // ← SI nos pasan una coordenada inicial, la marcamos y notificamos al padre:
+    if (widget.initialLatLng != null) {
+      _picked = widget.initialLatLng;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onLocationSelected?.call(_picked!);
+      });
+    }
+  }
+
   Future<void> _reverseGeocode(LatLng pos) async {
     setState(() => _geoLoading = true);
     try {
-      final url = Uri.parse('https://api.mapbox.com/geocoding/v5/'
-          'mapbox.places/${pos.longitude},${pos.latitude}.json'
+      final url = Uri.parse('https://api.mapbox.com/geocoding/v5/mapbox.places/'
+          '${pos.longitude},${pos.latitude}.json'
           '?access_token=$_mapboxToken&limit=1&language=es');
       final res = await http.get(url);
       if (res.statusCode == 200) {
@@ -57,7 +74,7 @@ class _StepLocationState extends State<StepLocation> {
         }
       }
     } catch (_) {
-      // opcional: mostrar error
+      // silencioso
     } finally {
       if (mounted) setState(() => _geoLoading = false);
     }
@@ -134,7 +151,8 @@ class _StepLocationState extends State<StepLocation> {
                 borderRadius: BorderRadius.circular(12),
                 child: FlutterMap(
                   options: MapOptions(
-                    initialCenter: _initialCenter,
+                    // ← aquí usamos el picked (o el centro por defecto)
+                    initialCenter: _picked ?? _initialCenter,
                     initialZoom: 13,
                     onTap: (_, latlng) {
                       setState(() => _picked = latlng);
@@ -144,13 +162,13 @@ class _StepLocationState extends State<StepLocation> {
                   ),
                   children: [
                     TileLayer(
-                      urlTemplate: 'https://api.mapbox.com/styles/v1/$_styleId/'
-                          'tiles/256/{z}/{x}/{y}@2x?access_token=$_mapboxToken',
+                      urlTemplate:
+                          'https://api.mapbox.com/styles/v1/$_styleId/tiles/256/{z}/{x}/{y}@2x'
+                          '?access_token=$_mapboxToken',
                       additionalOptions: {
                         'accessToken': _mapboxToken,
                         'id': _styleId,
                       },
-                      subdomains: const ['a', 'b', 'c', 'd'],
                     ),
                     if (_picked != null)
                       MarkerLayer(

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:graphql_flutter/graphql_flutter.dart';
 import '../../viewmodels/property_viewmodel.dart';
-import 'property_form_view.dart';
-import '../../viewmodels/profile_viewmodel.dart';
 import '../../models/property.dart';
 import 'property_detail_view.dart';
 import '../../viewmodels/favorite_viewmodel.dart';
 import '../../widgets/property_filter_header.dart';
 
 class PropertyListView extends StatelessWidget {
-  const PropertyListView({Key? key}) : super(key: key);
+  const PropertyListView({super.key});
 
   @override
   Widget build(BuildContext context) {
