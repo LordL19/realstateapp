@@ -19,6 +19,9 @@ class Property {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  final double? latitude;
+  final double? longitude;
+
   Property({
     required this.idProperty,
     required this.idUser,
@@ -37,6 +40,8 @@ class Property {
     required this.photos,
     required this.createdAt,
     required this.updatedAt,
+    this.latitude,
+    this.longitude,
   });
 
   factory Property.fromJson(Map<String, dynamic> json) {
@@ -58,6 +63,8 @@ class Property {
       photos: List<String>.from(json['photos']),
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
     );
   }
 
@@ -80,6 +87,8 @@ class Property {
       photos: input.photos,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
+      latitude: input.latitude ?? latitude,
+      longitude: input.longitude ?? longitude,
     );
   }
 
@@ -104,4 +113,4 @@ class Property {
       updatedAt: other.updatedAt,
     );
   }
-} 
+}
