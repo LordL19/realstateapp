@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/widgets/shared/app_date_field.dart';
 import '../../models/create_visit_request.dart';
 import '../../viewmodels/visits_viewmodel.dart';
 
@@ -25,7 +26,6 @@ class _VisitBookingViewState extends State<VisitBookingView> {
   DateTime? selectedDate;
   String? selectedHour;
 
-
   final List<String> hours = List.generate(10, (index) {
     final hour = index + 9;
     return '${hour.toString().padLeft(2, '0')}:00';
@@ -36,19 +36,37 @@ class _VisitBookingViewState extends State<VisitBookingView> {
     final vm = Provider.of<VisitViewModel>(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Agendar Visita")),
+      appBar: AppBar(
+        title: const Text(
+          "Agendar Visita",
+          style: TextStyle(fontSize: 20),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Text(
+                "Detalles",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 4),
+              Container(
+                height: 2,
+                color: Colors.deepOrange,
+              ),
+              const SizedBox(height: 24),
+
               // Email
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Correo de contacto',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) => value == null || !value.contains('@')
@@ -60,9 +78,10 @@ class _VisitBookingViewState extends State<VisitBookingView> {
               // Teléfono
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Teléfono de contacto',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) => value == null || value.length < 6
@@ -72,16 +91,9 @@ class _VisitBookingViewState extends State<VisitBookingView> {
               const SizedBox(height: 16),
 
               // Fecha
-              ListTile(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
-                tileColor: Colors.grey[100],
-                title: Text(
-                  selectedDate == null
-                      ? 'Selecciona una fecha'
-                      : '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}',
-                ),
-                trailing: const Icon(Icons.calendar_today),
+              AppDateField(
+                label: 'Fecha de visita',
+                date: selectedDate,
                 onTap: () async {
                   final picked = await showDatePicker(
                     context: context,
@@ -90,19 +102,25 @@ class _VisitBookingViewState extends State<VisitBookingView> {
                     lastDate: DateTime.now().add(const Duration(days: 60)),
                   );
                   if (picked != null) {
-                    setState(() {
-                      selectedDate = picked;
-                    });
+                    setState(() => selectedDate = picked);
                   }
                 },
+                validator: (_) {
+                  if (selectedDate == null) {
+                    return 'Selecciona una fecha válida';
+                  }
+                  return null;
+                },
               ),
+
               const SizedBox(height: 16),
 
               // Hora
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Hora de visita',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12)),
                 ),
                 items: hours
                     .map((hour) => DropdownMenuItem(
@@ -125,7 +143,6 @@ class _VisitBookingViewState extends State<VisitBookingView> {
                       ? null
                       : () async {
                           if (!_formKey.currentState!.validate()) return;
-
                           if (selectedDate == null || selectedHour == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -164,9 +181,8 @@ class _VisitBookingViewState extends State<VisitBookingView> {
                           } else {
                             final error = vm.errorMessage ??
                                 'No se pudo agendar la visita.';
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(error)),
-                            );
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(SnackBar(content: Text(error)));
                           }
                         },
                   child: vm.isLoading
