@@ -67,13 +67,13 @@ class ProfileHeaderSliver extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  profile.email,
-                  style: tt.bodyLarge?.copyWith(
-                    color: cs.onPrimary.withOpacity(.85),
-                  ),
-                ),
+                // const SizedBox(height: AppSpacing.xs),
+                // Text(
+                //   profile.email,
+                //   style: tt.bodyLarge?.copyWith(
+                //     color: cs.onPrimary.withOpacity(.85),
+                //   ),
+                // ),
               ],
             ),
           ),

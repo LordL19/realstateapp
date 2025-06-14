@@ -144,38 +144,20 @@ class _ProfileViewState extends State<ProfileView>
                 ),
               ),
 
-              /// ---------- Lista de acciones ----------
+              /// ---------- Logout ----------
               SliverToBoxAdapter(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
-                  child: ActionTilesSection(
-                    onOwnerVisits: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const OwnerVisitsView()),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxl, vertical: AppSpacing.l),
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: cs.error,
+                      side: BorderSide(color: cs.error),
+                      minimumSize: const Size.fromHeight(48),
                     ),
-                  ),
-                ),
-              ),
-
-              /// ---------- Logout ----------
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xxl),
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: cs.error,
-                        side: BorderSide(color: cs.error),
-                        minimumSize: const Size.fromHeight(48),
-                      ),
-                      icon: const Icon(Icons.logout),
-                      label: const Text('Cerrar sesión'),
-                      onPressed: _logout,
-                    ),
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Cerrar sesión'),
+                    onPressed: _logout,
                   ),
                 ),
               ),
