@@ -46,7 +46,6 @@ class _MyVisitsViewState extends State<MyVisitsView> {
 
     if (confirmed == true && mounted) {
       final vm = context.read<VisitViewModel>();
-      final success = await vm.cancelVisit(id);
       await vm.fetchMyVisits();
     }
   }

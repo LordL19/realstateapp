@@ -9,24 +9,21 @@ import '../config/api_config.dart';
 class AuthService {
   static final _client = http.Client();
   final storage = const FlutterSecureStorage();
-  
+
   final String _baseUrl = ApiConfig.getBaseUrl(Microservice.users);
-  
+
   static const _timeout = Duration(seconds: 30);
 
   /// MÉTODO DE DEBUG PARA VERIFICAR CONECTIVIDAD
   Future<bool> testConnection() async {
     try {
-      // Se combinan los logs para más información
       developer.log('Probando conexión a: $_baseUrl');
       developer.log('Plataforma: ${kIsWeb ? "WEB" : "MOBILE"}');
 
-      final response = await _client
-          .get(
-            Uri.parse('$_baseUrl'), // Usamos _baseUrl
-            headers: {'Accept': 'application/json'},
-          )
-          .timeout(const Duration(seconds: 10));
+      final response = await _client.get(
+        Uri.parse(_baseUrl),
+        headers: {'Accept': 'application/json'},
+      ).timeout(const Duration(seconds: 10));
 
       developer.log('Respuesta del servidor: ${response.statusCode}');
       return response.statusCode == 200 || response.statusCode == 404;
@@ -40,7 +37,7 @@ class AuthService {
   Future<String?> login(String email, String password) async {
     try {
       developer.log('Intentando login para: $email');
-      // Se combinan los logs
+
       developer.log('URL: $_baseUrl/auth/login');
       developer.log('Plataforma: ${kIsWeb ? "WEB (Edge/Chrome)" : "MOBILE"}');
 
@@ -53,7 +50,7 @@ class AuthService {
 
       final response = await _client
           .post(
-            Uri.parse('$_baseUrl/auth/login'), // Usamos _baseUrl
+            Uri.parse('$_baseUrl/auth/login'),
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
@@ -79,7 +76,8 @@ class AuthService {
       return null;
     } on TimeoutException {
       developer.log('Timeout en login');
-      throw Exception('Tiempo de espera agotado. Verifica que tu API esté corriendo.');
+      throw Exception(
+          'Tiempo de espera agotado. Verifica que tu API esté corriendo.');
     } on FormatException catch (e) {
       developer.log('Error de formato: $e');
       throw Exception('Respuesta del servidor inválida');
@@ -144,10 +142,12 @@ class AuthService {
       return success;
     } on TimeoutException {
       developer.log('Timeout en registro');
-      throw Exception('Tiempo de espera agotado. Verifica que tu API esté corriendo.');
+      throw Exception(
+          'Tiempo de espera agotado. Verifica que tu API esté corriendo.');
     } catch (e) {
       developer.log('Error en registro: $e');
-      if (e.toString().contains('XMLHttpRequest') || e.toString().contains('CORS')) {
+      if (e.toString().contains('XMLHttpRequest') ||
+          e.toString().contains('CORS')) {
         throw Exception('Error CORS: Debes configurar CORS en tu API.');
       }
       throw Exception('Error al registrarse: ${e.toString()}');
@@ -164,15 +164,13 @@ class AuthService {
 
       // --- Se elige la implementación de 'sergio' ---
       // Es más limpia y correcta.
-      final response = await _client
-          .get(
-            Uri.parse('$_baseUrl/user/profile'), // Endpoint más convencional
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Accept': 'application/json',
-            },
-          )
-          .timeout(_timeout);
+      final response = await _client.get(
+        Uri.parse('$_baseUrl/user/profile'), // Endpoint más convencional
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      ).timeout(_timeout);
 
       developer.log('Respuesta perfil - Código: ${response.statusCode}');
 

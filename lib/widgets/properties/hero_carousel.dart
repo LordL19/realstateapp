@@ -1,8 +1,6 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:provider/provider.dart';
-import '../../viewmodels/favorite_viewmodel.dart';
 
 class HeroCarousel extends StatefulWidget {
   final List<String> photos;

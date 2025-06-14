@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart'; // Se mantiene por si se necesita en el futuro
+// Se mantiene por si se necesita en el futuro
 import '../models/user_profile.dart';
 import '../config/api_config.dart';
 

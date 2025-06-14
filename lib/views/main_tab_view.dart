@@ -108,7 +108,7 @@ class _MainTabViewContentState extends State<_MainTabViewContent>
         barDecoration: BoxDecoration(
           color: cs.surface,
           borderRadius: BorderRadius.circular(32),
-          boxShadow: [], // <- no hairline
+          boxShadow: const [], // <- no hairline
         ),
         // The floating bar itself
         child: Stack(

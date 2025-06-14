@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import '../models/create_property_input.dart';
 import '../models/property.dart';

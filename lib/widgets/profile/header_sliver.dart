@@ -22,7 +22,7 @@ class ProfileHeaderSliver extends StatelessWidget {
       backgroundColor: Colors.transparent, // ← lo pintamos dentro
       elevation: 0,
       pinned: false,
-      expandedHeight: 250,
+      expandedHeight: 210,
       // acción editar
       actions: [
         IconButton(

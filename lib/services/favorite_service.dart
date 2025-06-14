@@ -8,7 +8,8 @@ class FavoriteService {
   final http.Client _httpClient;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  FavoriteService({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
+  FavoriteService({http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
 
   Future<Map<String, String>> _defaultHeaders() async {
     final token = await _storage.read(key: 'jwt');
@@ -20,9 +21,11 @@ class FavoriteService {
 
   /// Obtiene la lista de IDs de propiedades marcadas como favoritas por el usuario.
   Future<List<String>> getFavoriteIds() async {
-    final uri = Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
-    debugPrint('📋 Solicitando lista de favoritos');
-    final response = await _httpClient.get(uri, headers: await _defaultHeaders());
+    final uri =
+        Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
+    debugPrint('Solicitando lista de favoritos');
+    final response =
+        await _httpClient.get(uri, headers: await _defaultHeaders());
 
     if (response.statusCode != 200) {
       throw Exception('Error al obtener favoritos: ${response.statusCode}');
@@ -33,22 +36,22 @@ class FavoriteService {
         .map((item) => item['idProperty'] ?? item['propertyId'])
         .whereType<String>()
         .toList();
-    //debugPrint('📋 Favoritos recibidos: ${ids.length} items');
     return ids;
   }
 
   /// Marca una propiedad como favorita.
   /// El mismo endpoint también sirve para quitar favoritos si ya existe
   Future<bool> addFavorite(String propertyId) async {
-    final uri = Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
-    debugPrint('⭐ Enviando solicitud POST para alternar favorito: $propertyId');
+    final uri =
+        Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
     final response = await _httpClient.post(
       uri,
       headers: await _defaultHeaders(),
       body: jsonEncode({'idProperty': propertyId, 'propertyId': propertyId}),
     );
 
-    debugPrint('⭐ Respuesta del servidor: ${response.statusCode} - ${response.body}');
+    debugPrint(
+        '⭐ Respuesta del servidor: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
     }
@@ -56,21 +59,18 @@ class FavoriteService {
     throw Exception('Error al agregar favorito: ${response.statusCode}');
   }
 
-  /// Intenta quitar favorito usando DELETE /favorites/{id}. Si falla, intenta POST toggle.
   Future<bool> removeFavorite(String propertyId) async {
     final base = ApiConfig.getBaseUrl(Microservice.favorites);
     final deleteUri = Uri.parse('$base/favorites/$propertyId');
 
-    // 1) Intentar DELETE directo
-    final deleteResp = await _httpClient.delete(deleteUri, headers: await _defaultHeaders());
+    final deleteResp =
+        await _httpClient.delete(deleteUri, headers: await _defaultHeaders());
 
     if (deleteResp.statusCode == 200 || deleteResp.statusCode == 204) {
-      debugPrint('⭐ DELETE favorito ok');
+      debugPrint('DELETE favorito ok');
       return true;
     }
 
-    // 2) Fallback: usar POST toggle
-    debugPrint('⭐ DELETE no soportado (${deleteResp.statusCode}), fallback a POST toggle');
     return addFavorite(propertyId);
   }
-} 
+}

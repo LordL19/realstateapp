@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../theme/theme.dart';
 import '../../viewmodels/property_viewmodel.dart';
 import '../../viewmodels/visits_viewmodel.dart';
 import '../properties/property_detail_view.dart';

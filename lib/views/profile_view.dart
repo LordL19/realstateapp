@@ -5,7 +5,6 @@ import 'package:realestate_app/views/properties/favorite_list_view.dart';
 import 'package:realestate_app/views/properties/my_properties_list_view.dart';
 import 'package:realestate_app/views/register/register_wizard.dart';
 import 'package:realestate_app/views/visits/my_visits_view.dart';
-import 'package:realestate_app/views/visits/owner_visits_view.dart';
 import 'package:realestate_app/widgets/profile/action_tiles.dart';
 import 'package:realestate_app/widgets/profile/header_sliver.dart';
 import 'package:realestate_app/widgets/profile/info_section.dart';
@@ -118,19 +117,9 @@ class _ProfileViewState extends State<ProfileView>
                     favourites: favCount,
                     myProperties: myPropsCount,
                     visits: visitsCount,
-                    onTapFav: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const FavHistoryView()),
-                    ),
-                    onTapProps: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const MyPropertiesListView()),
-                    ),
-                    onTapVisits: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MyVisitsView()),
-                    ),
+                    onTapFav: () {},
+                    onTapProps: () {},
+                    onTapVisits: () {},
                   ),
                 ),
               ),
