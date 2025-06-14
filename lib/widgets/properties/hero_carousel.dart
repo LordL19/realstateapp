@@ -1,6 +1,8 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/favorite_viewmodel.dart';
 
 class HeroCarousel extends StatefulWidget {
   final List<String> photos;
@@ -92,7 +94,8 @@ class _HeroCarouselState extends State<HeroCarousel> {
                   Row(
                     children: [
                       _circularBtn(Icons.favorite_border, () {
-                        setState(() => fav = !fav);
+                        final newValue = !fav;
+                        setState(() => fav = newValue);
                         widget.onFavToggle?.call(fav);
                       }, toggleFav: true),
                       const SizedBox(width: 8),

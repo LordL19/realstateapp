@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import '../config/api_config.dart';
 
 class FavoriteService {
@@ -20,6 +21,7 @@ class FavoriteService {
   /// Obtiene la lista de IDs de propiedades marcadas como favoritas por el usuario.
   Future<List<String>> getFavoriteIds() async {
     final uri = Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
+    debugPrint('📋 Solicitando lista de favoritos');
     final response = await _httpClient.get(uri, headers: await _defaultHeaders());
 
     if (response.statusCode != 200) {
@@ -27,23 +29,26 @@ class FavoriteService {
     }
 
     final List<dynamic> data = jsonDecode(response.body);
-
-    // Cada elemento puede ser un objeto { idProperty: "uuid", ... }
-    return data
+    final ids = data
         .map((item) => item['idProperty'] ?? item['propertyId'])
         .whereType<String>()
         .toList();
+    //debugPrint('📋 Favoritos recibidos: ${ids.length} items');
+    return ids;
   }
 
   /// Marca una propiedad como favorita.
+  /// El mismo endpoint también sirve para quitar favoritos si ya existe
   Future<bool> addFavorite(String propertyId) async {
     final uri = Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
+    debugPrint('⭐ Enviando solicitud POST para alternar favorito: $propertyId');
     final response = await _httpClient.post(
       uri,
       headers: await _defaultHeaders(),
-      body: jsonEncode({'idProperty': propertyId}),
+      body: jsonEncode({'idProperty': propertyId, 'propertyId': propertyId}),
     );
 
+    debugPrint('⭐ Respuesta del servidor: ${response.statusCode} - ${response.body}');
     if (response.statusCode == 200 || response.statusCode == 201) {
       return true;
     }
@@ -51,23 +56,21 @@ class FavoriteService {
     throw Exception('Error al agregar favorito: ${response.statusCode}');
   }
 
-  /// Elimina una propiedad de favoritos.
-  /// Según el Swagger solo se expone DELETE /favorites (sin path) con el cuerpo
-  /// `{"idProperty": "uuid"}`. Adaptamos la llamada para reflejar esto.
+  /// Intenta quitar favorito usando DELETE /favorites/{id}. Si falla, intenta POST toggle.
   Future<bool> removeFavorite(String propertyId) async {
-    final uri = Uri.parse('${ApiConfig.getBaseUrl(Microservice.favorites)}/favorites');
-    // El microservicio no expone DELETE. Se usa POST nuevamente para "des-favorito",
-    // el backend se encarga de quitar si ya existe.
-    final response = await _httpClient.post(
-      uri,
-      headers: await _defaultHeaders(),
-      body: jsonEncode({'idProperty': propertyId}),
-    );
+    final base = ApiConfig.getBaseUrl(Microservice.favorites);
+    final deleteUri = Uri.parse('$base/favorites/$propertyId');
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
+    // 1) Intentar DELETE directo
+    final deleteResp = await _httpClient.delete(deleteUri, headers: await _defaultHeaders());
+
+    if (deleteResp.statusCode == 200 || deleteResp.statusCode == 204) {
+      debugPrint('⭐ DELETE favorito ok');
       return true;
     }
 
-    throw Exception('Error al eliminar favorito: ${response.statusCode}');
+    // 2) Fallback: usar POST toggle
+    debugPrint('⭐ DELETE no soportado (${deleteResp.statusCode}), fallback a POST toggle');
+    return addFavorite(propertyId);
   }
 } 

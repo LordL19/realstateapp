@@ -39,19 +39,21 @@ class _FavHistoryViewState extends State<FavHistoryView> {
     final favVm = context.watch<FavoriteViewModel>();
     final vhVm = context.watch<VisitHistoryViewModel>();
 
-    // construir listas base
-    final baseList = _segment == 0
-        ? vm.properties
-            .where((p) => favVm.favoriteIds.contains(p.idProperty))
-            .toList()
-        : vm.properties
-            .where((p) => vhVm.userVisitHistory
-                .map((v) => v.idProperty)
-                .contains(p.idProperty))
-            .toList();
-
-    // aplicar filtros
-    final list = vm.applyFilters(baseList);
+    // Construir listas base con IDs para evitar problemas de sincronización
+    final Set<String> favoriteIds = favVm.favoriteIds;
+    final Set<String> historyIds = vhVm.userVisitHistory
+        .map((v) => v.idProperty)
+        .toSet();
+        
+    // Filtrar propiedades según la pestaña activa
+    final baseList = vm.properties.where((p) => 
+        _segment == 0 
+            ? favoriteIds.contains(p.idProperty) 
+            : historyIds.contains(p.idProperty)
+    ).toList();
+    
+    // Aplicar filtros adicionales
+    final list = vm.hasActiveFilters ? vm.applyFilters(baseList) : baseList;
 
     return Scaffold(
       body: SafeArea(
@@ -62,9 +64,23 @@ class _FavHistoryViewState extends State<FavHistoryView> {
             Padding(
               padding: const EdgeInsets.fromLTRB(
                   AppSpacing.xxl, AppSpacing.xxl, AppSpacing.xxl, 0),
-              child: Text(
-                'Mi actividad',
-                style: Theme.of(context).textTheme.headlineLarge,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Mi actividad',
+                    style: Theme.of(context).textTheme.headlineLarge,
+                  ),
+                  IconButton(
+                    tooltip: 'Refrescar',
+                    icon: const Icon(Icons.refresh),
+                    onPressed: () {
+                      favVm.fetchFavorites();
+                      vhVm.fetchUserVisitHistory();
+                      vm.fetchProperties();
+                    },
+                  ),
+                ],
               ),
             ),
 
@@ -100,7 +116,15 @@ class _FavHistoryViewState extends State<FavHistoryView> {
                       label: Text('Historial')),
                 ],
                 selected: {_segment},
-                onSelectionChanged: (s) => setState(() => _segment = s.first),
+                onSelectionChanged: (s) {
+                  setState(() => _segment = s.first);
+                  // Asegurar que los datos estén actualizados al cambiar de pestaña
+                  if (_segment == 0) {
+                    favVm.fetchFavorites();
+                  } else {
+                    vhVm.fetchUserVisitHistory();
+                  }
+                },
                 showSelectedIcon: false,
                 style: ButtonStyle(
                   visualDensity: VisualDensity.compact,
@@ -131,6 +155,7 @@ class _FavHistoryViewState extends State<FavHistoryView> {
     }
 
     return GridView.builder(
+      key: ValueKey('fav_history_grid_${_segment}'),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -142,15 +167,25 @@ class _FavHistoryViewState extends State<FavHistoryView> {
       itemBuilder: (_, i) {
         final prop = list[i];
         return PropertyCard(
+          key: ValueKey(prop.idProperty),
           property: prop,
           marker: _segment == 0 ? CardMarker.favourite : CardMarker.viewed,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) =>
-                  PropertyDetailView(property: prop, isOwner: false),
-            ),
-          ),
+          onTap: () async {
+            // Navegar a la vista de detalle
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PropertyDetailView(property: prop, isOwner: false),
+              ),
+            );
+            
+            // Recargar datos al volver para asegurar sincronización
+            if (_segment == 0) {
+              context.read<FavoriteViewModel>().fetchFavorites();
+            } else {
+              context.read<VisitHistoryViewModel>().fetchUserVisitHistory();
+            }
+          },
         );
       },
     );

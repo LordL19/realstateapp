@@ -102,7 +102,9 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                     listedBy: listedBy,
                     initiallyFav: isFav,
                     onBack: () => Navigator.pop(context),
-                    onFavToggle: (v) => favVM.toggleFavorite(p.idProperty),
+                    onFavToggle: (v) {
+                      favVM.toggleFavorite(p.idProperty);
+                    },
                   ),
 
                   /* ---------- CONTENIDO ---------- */
