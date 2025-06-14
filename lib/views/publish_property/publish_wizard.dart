@@ -149,9 +149,22 @@ class _PublishWizardState extends State<PublishWizard> {
         ? await vm.updateProperty(_prop.idProperty, input)
         : await vm.createProperty(input);
 
+    // Refrescar las listas para que otras vistas se sincronicen inmediatamente
+    if (ok) await vm.fetchProperties();
+
     setState(() => _loading = false);
     _snack(ok ? 'Guardado' : 'Error al guardar', error: !ok);
-    if (ok && mounted) Navigator.pop(context);
+    if (ok && mounted) {
+      if (_isEdit) {
+        // Cierra el wizard y la pantalla de detalle para volver a la lista
+        Navigator.of(context).pop(); // Wizard
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop(); // Detalle
+        }
+      } else {
+        Navigator.pop(context);
+      }
+    }
   }
 
   /* ────────────────  UI  ──────────────── */

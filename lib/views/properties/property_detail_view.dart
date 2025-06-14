@@ -75,13 +75,14 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
         ? LatLng(p.latitude!, p.longitude!)
         : _fallback;
 
-    final desc = (p.description ?? '').trim().length < 50
-        ? 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
+    final hasDesc = p.description != null && p.description!.trim().isNotEmpty;
+    final desc = hasDesc
+        ? p.description!.trim()
+        : 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
             'con espacios amplios y luminosos, acabados de primera calidad y una '
             'ubicación privilegiada cercana a centros comerciales, parques y '
             'servicios esenciales. Ideal para familias o profesionales que '
-            'buscan confort y accesibilidad.'
-        : p.description!.trim();
+            'buscan confort y accesibilidad.';
 
     return Consumer<FavoriteViewModel>(
       builder: (_, favVM, __) {
