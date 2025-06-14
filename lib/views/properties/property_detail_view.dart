@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/views/visits/property_visits_view.dart';
 
 import '../../models/property.dart';
 import '../../services/user_service.dart';
@@ -17,8 +18,6 @@ import 'package:realestate_app/views/publish_property/publish_wizard.dart';
 import 'package:realestate_app/views/visits/visit_booking_view.dart';
 import '../../viewmodels/visits_viewmodel.dart';
 import '../../viewmodels/property_viewmodel.dart';
-import '../../models/create_visit_history_request.dart';
-import '../../viewmodels/visit_history_viewmodel.dart';
 
 class PropertyDetailView extends StatefulWidget {
   final Property property;
@@ -49,23 +48,6 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
 
     final favVM = context.read<FavoriteViewModel>();
     if (favVM.state == FavoriteState.initial) favVM.fetchFavorites();
-
-    // ---- Registrar visita ----
-    final visitVM = context.read<VisitHistoryViewModel>();
-    final p = widget.property;
-    final req = CreateVisitHistoryRequest(
-      idProperty: p.idProperty,
-      propertyTitle: p.title,
-      propertyType: p.propertyType ?? '',
-      transactionType: p.transactionType ?? '',
-      city: p.city,
-      country: p.country,
-      ownerId: p.idUser,
-    );
-    visitVM.recordVisit(req).then((_) {
-      // Refrescar historial tras registrar
-      visitVM.fetchUserVisitHistory();
-    });
   }
 
   Color _statusColor(String status, BuildContext context) {
@@ -94,14 +76,13 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
         ? LatLng(p.latitude!, p.longitude!)
         : _fallback;
 
-    final hasDesc = p.description != null && p.description!.trim().isNotEmpty;
-    final desc = hasDesc
-        ? p.description!.trim()
-        : 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
+    final desc = (p.description ?? '').trim().length < 50
+        ? 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
             'con espacios amplios y luminosos, acabados de primera calidad y una '
             'ubicación privilegiada cercana a centros comerciales, parques y '
             'servicios esenciales. Ideal para familias o profesionales que '
-            'buscan confort y accesibilidad.';
+            'buscan confort y accesibilidad.'
+        : p.description!.trim();
 
     return Consumer<FavoriteViewModel>(
       builder: (_, favVM, __) {
@@ -121,9 +102,7 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                     listedBy: listedBy,
                     initiallyFav: isFav,
                     onBack: () => Navigator.pop(context),
-                    onFavToggle: (v) {
-                      favVM.toggleFavorite(p.idProperty);
-                    },
+                    onFavToggle: (v) => favVM.toggleFavorite(p.idProperty),
                   ),
 
                   /* ---------- CONTENIDO ---------- */
@@ -228,12 +207,11 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                   top: false,
                   child: Padding(
                     padding: const EdgeInsets.all(AppSpacing.l),
-                    child: Row(
-                      children: [
-                        // Solo "Agendar tour" para no-owners, editar para owners
-                        Expanded(
-                          child: widget.isOwner
-                              ? OutlinedButton(
+                    child: widget.isOwner
+                        ? Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
@@ -247,26 +225,47 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                     );
                                   },
                                   child: const Text('Editar propiedad'),
-                                )
-                              : ElevatedButton(
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child: ElevatedButton(
                                   onPressed: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
                                         builder: (_) => ChangeNotifierProvider(
                                           create: (_) => VisitViewModel(),
-                                          child: VisitBookingView(
+                                          child: PropertyVisitsView(
                                             propertyId: p.idProperty,
-                                            ownerId: p.idUser,
+                                            propertyTitle: p.title,
                                           ),
                                         ),
                                       ),
                                     );
                                   },
-                                  child: const Text('Agendar tour'),
+                                  child: const Text('Ver tours'),
                                 ),
-                        ),
-                      ],
-                    ),
+                              ),
+                            ],
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ChangeNotifierProvider(
+                                    create: (_) => VisitViewModel(),
+                                    child: VisitBookingView(
+                                      propertyId: p.idProperty,
+                                      ownerId: p.idUser,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Agendar tour'),
+                          ),
                   ),
                 ),
               ),
