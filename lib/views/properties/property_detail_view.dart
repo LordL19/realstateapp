@@ -17,6 +17,8 @@ import 'package:realestate_app/views/publish_property/publish_wizard.dart';
 import 'package:realestate_app/views/visits/visit_booking_view.dart';
 import '../../viewmodels/visits_viewmodel.dart';
 import '../../viewmodels/property_viewmodel.dart';
+import '../../models/create_visit_history_request.dart';
+import '../../viewmodels/visit_history_viewmodel.dart';
 
 class PropertyDetailView extends StatefulWidget {
   final Property property;
@@ -47,6 +49,23 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
 
     final favVM = context.read<FavoriteViewModel>();
     if (favVM.state == FavoriteState.initial) favVM.fetchFavorites();
+
+    // ---- Registrar visita ----
+    final visitVM = context.read<VisitHistoryViewModel>();
+    final p = widget.property;
+    final req = CreateVisitHistoryRequest(
+      idProperty: p.idProperty,
+      propertyTitle: p.title,
+      propertyType: p.propertyType ?? '',
+      transactionType: p.transactionType ?? '',
+      city: p.city,
+      country: p.country,
+      ownerId: p.idUser,
+    );
+    visitVM.recordVisit(req).then((_) {
+      // Refrescar historial tras registrar
+      visitVM.fetchUserVisitHistory();
+    });
   }
 
   Color _statusColor(String status, BuildContext context) {
