@@ -16,7 +16,7 @@ class RecentlyViewedStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 300,
+      height: 400,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
         scrollDirection: Axis.horizontal,

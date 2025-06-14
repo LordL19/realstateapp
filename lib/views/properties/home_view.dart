@@ -39,7 +39,7 @@ class _HomeViewState extends State<HomeView> {
 
     /* ───────────────────────── GRID + EMPTY STATE ─────────────────────── */
     if (vm.hasActiveFilters) {
-      final filtered = vm.applyFilters(vm.properties);
+      final filtered = vm.applyFilters(vm.publicProperties);
 
       return Scaffold(
         body: CustomScrollView(
@@ -101,7 +101,7 @@ class _HomeViewState extends State<HomeView> {
                     crossAxisCount: 2, // 4 × 4
                     mainAxisSpacing: AppSpacing.m,
                     crossAxisSpacing: AppSpacing.m,
-                    mainAxisExtent: 285,
+                    mainAxisExtent: 320,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, i) => PropertyCard(

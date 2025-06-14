@@ -11,9 +11,12 @@ class HomeHeader extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final isWide = MediaQuery.of(context).size.width >= 700;
+    final scale = MediaQuery.of(context).textScaleFactor;
+    // Para pantallas angostas, si la escala de texto es grande, damos más altura.
+    final narrowRatio = (scale > 1.1) ? 3 / 2 : 4 / 3; // 1.5 ó 1.33
 
     return AspectRatio(
-      aspectRatio: isWide ? 2.8 / 1 : 16 / 9,
+      aspectRatio: isWide ? 2.8 / 1 : narrowRatio,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -36,12 +39,16 @@ class HomeHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Encuentra el hogar\nde tus sueños',
-                  style: tt.displaySmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: cs.onSurface,
-                    height: 1.15,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Encuentra el hogar\nde tus sueños',
+                    style: tt.displaySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      height: 1.15,
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.s),
@@ -62,7 +69,7 @@ class HomeHeader extends StatelessWidget {
   }
 }
 
-/// El “blob” borroso de fondo.
+/// El "blob" borroso de fondo.
 class _SplashAccent extends StatelessWidget {
   final Color color;
   const _SplashAccent({required this.color});
