@@ -178,7 +178,6 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SizedBox(
-                                  height: _segment == 0 ? 140 : 180,
                                   child: Row(
                                     children: [
                                       ClipRRect(
@@ -191,8 +190,6 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                             ? Image.network(
                                                 property!.photos.first,
                                                 width: 120,
-                                                height:
-                                                    _segment == 0 ? 140 : 180,
                                                 fit: BoxFit.cover,
                                               )
                                             : Container(
@@ -234,10 +231,13 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                                         Colors.grey.shade600),
                                               ),
                                               const SizedBox(height: 10),
-                                              Text(
-                                                'Fecha: ${dateFormat.format(visit.requestedDateTime)}',
-                                                style: const TextStyle(
-                                                    fontSize: 13),
+                                              FittedBox(
+                                                fit: BoxFit.scaleDown,
+                                                child: Text(
+                                                  'Fecha: ${dateFormat.format(visit.requestedDateTime)}',
+                                                  style: const TextStyle(
+                                                      fontSize: 13),
+                                                ),
                                               ),
                                               if (_segment == 1) ...[
                                                 const SizedBox(height: 2),
@@ -249,9 +249,8 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                                 Text(
                                                   visit.contactEmail,
                                                   style: const TextStyle(
-                                                      fontSize: 13,
-                                                      fontStyle:
-                                                          FontStyle.italic),
+                                                      fontSize: 13),
+                                                  overflow: TextOverflow.ellipsis,
                                                 ),
                                               ],
                                               const SizedBox(height: 4),

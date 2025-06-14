@@ -163,6 +163,7 @@ class _MyVisitsViewState extends State<MyVisitsView> {
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: Row(
+                                  mainAxisSize: MainAxisSize.max,
                                   children: [
                                     // --- Imagen ---
                                     ClipRRect(
@@ -226,6 +227,7 @@ class _MyVisitsViewState extends State<MyVisitsView> {
                                               'Visita: ${dateFormat.format(visit.requestedDateTime)}',
                                               style:
                                                   const TextStyle(fontSize: 14),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                             const SizedBox(height: 2),
                                             Text(

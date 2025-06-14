@@ -82,37 +82,58 @@ class _OwnerVisitsViewState extends State<OwnerVisitsView> {
               : visits.isEmpty
                   ? const Center(child: Text("No hay visitas con ese estado."))
                   : ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       itemCount: visits.length,
                       itemBuilder: (context, index) {
                         final visit = visits[index];
                         return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            leading: const Icon(Icons.calendar_today),
-                            title: Text(
-                                visit.propertyTitle ?? 'Propiedad sin título'),
-                            subtitle: Text(
-                              '${dateFormat.format(visit.requestedDateTime)}\nEstado: ${visit.status}',
-                            ),
-                            isThreeLine: true,
-                            trailing: PopupMenuButton<String>(
-                              icon: const Icon(Icons.more_vert),
-                              onSelected: (value) {
-                                _changeStatus(context, visit.id, value);
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'aceptada',
-                                  child: Text('Aceptar'),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        visit.propertyTitle ??
+                                            'Propiedad sin título',
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                          'Fecha: ${dateFormat.format(visit.requestedDateTime)}'),
+                                      Text('Contacto: ${visit.contactPhone}'),
+                                      Text('Email: ${visit.contactEmail}'),
+                                      const SizedBox(height: 8),
+                                      Chip(
+                                        label: Text(visit.status),
+                                        backgroundColor:
+                                            Colors.orange.shade100,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                const PopupMenuItem(
-                                  value: 'rechazada',
-                                  child: Text('Rechazar'),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'cancelada',
-                                  child: Text('Cancelar'),
+                                PopupMenuButton<String>(
+                                  onSelected: (value) =>
+                                      _changeStatus(context, visit.id, value),
+                                  itemBuilder: (context) => [
+                                    if (visit.status == 'pendiente') ...[
+                                      const PopupMenuItem(
+                                          value: 'aceptada',
+                                          child: Text('Aceptar')),
+                                      const PopupMenuItem(
+                                          value: 'rechazada',
+                                          child: Text('Rechazar')),
+                                    ],
+                                    if (visit.status == 'aceptada')
+                                      const PopupMenuItem(
+                                          value: 'cancelada',
+                                          child: Text('Cancelar')),
+                                  ],
                                 ),
                               ],
                             ),
