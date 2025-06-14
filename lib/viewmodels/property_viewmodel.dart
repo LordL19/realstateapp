@@ -378,6 +378,24 @@ class PropertyViewModel extends ChangeNotifier {
     }
   }
 
+  /// Featured: elige 5 aleatorias de las públicas
+  List<Property> get featuredProperties {
+    final list = publicProperties.toList()..shuffle();
+    return list.take(5).toList();
+  }
+
+  /// Recomendaciones: por cercanía al precio promedio, pero solo de las públicas
+  List<Property> get recommendations {
+    final pubs = publicProperties;
+    if (pubs.length <= 6) return pubs;
+    final avgPrice =
+        pubs.fold<double>(0, (sum, p) => sum + p.price) / pubs.length;
+    final sorted = pubs.toList()
+      ..sort((a, b) =>
+          (a.price - avgPrice).abs().compareTo((b.price - avgPrice).abs()));
+    return sorted.take(6).toList();
+  }
+
   void resetFormState() {
     _formState = PropertyFormStatus.initial;
   }

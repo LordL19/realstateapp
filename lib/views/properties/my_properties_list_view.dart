@@ -116,7 +116,7 @@ class MyPropertiesListView extends StatelessWidget {
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          mainAxisExtent: 290,
+                          mainAxisExtent: 320,
                           crossAxisSpacing: AppSpacing.m,
                           mainAxisSpacing: AppSpacing.m,
                         ),
