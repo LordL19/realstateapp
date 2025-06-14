@@ -184,6 +184,16 @@ class PropertyCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
+                  if (property.description != null &&
+                      property.description!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      property.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: tt.bodySmall,
+                    ),
+                  ],
                 ],
               ),
             ),

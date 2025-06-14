@@ -80,7 +80,7 @@ class _MyAppState extends State<MyApp> {
           ChangeNotifierProvider(create: (_) => AuthViewModel()),
           ChangeNotifierProvider(create: (_) => ProfileViewModel()),
           ChangeNotifierProvider(
-              create: (_) => PropertyViewModel(client: client.value)),
+              create: (_) => PropertyViewModel(client: client.value)..fetchProperties()),
           ChangeNotifierProvider(create: (_) => VisitViewModel()),
           ChangeNotifierProvider(create: (_) => VisitHistoryViewModel()),
           ChangeNotifierProvider(create: (_) => FavoriteViewModel()),
