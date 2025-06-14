@@ -185,15 +185,13 @@ class PropertyCard extends StatelessWidget {
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),
                   if (property.description != null &&
-                      property.description!.trim().isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                      property.description!.trim().isNotEmpty)
                     Text(
                       property.description!,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: tt.bodySmall,
                     ),
-                  ],
                 ],
               ),
             ),
