@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:realestate_app/views/login_view.dart';
+import 'package:realestate_app/views/properties/favorite_list_view.dart';
+import 'package:realestate_app/views/properties/my_properties_list_view.dart';
+import 'package:realestate_app/views/register/register_wizard.dart';
+import 'package:realestate_app/views/visits/my_visits_view.dart';
 import 'package:realestate_app/views/visits/owner_visits_view.dart';
-import 'package:realestate_app/views/profile/user_visit_history_view.dart';
-import '../viewmodels/profile_viewmodel.dart';
-import '../viewmodels/auth_viewmodel.dart';
-import '../views/visits/my_visits_view.dart';
-import 'login_view.dart';
-import 'register/register_wizard.dart';
+import 'package:realestate_app/widgets/profile/action_tiles.dart';
+import 'package:realestate_app/widgets/profile/header_sliver.dart';
+import 'package:realestate_app/widgets/profile/info_section.dart';
+import 'package:realestate_app/widgets/profile/quick_stats.dart';
+
+import '../../theme/theme.dart';
+import '../../viewmodels/profile_viewmodel.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../../viewmodels/favorite_viewmodel.dart';
+import '../../viewmodels/property_viewmodel.dart';
+import '../../viewmodels/visits_viewmodel.dart';
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({Key? key}) : super(key: key);
+  const ProfileView({super.key});
 
   @override
-  _ProfileViewState createState() => _ProfileViewState();
+  State<ProfileView> createState() => _ProfileViewState();
 }
 
 class _ProfileViewState extends State<ProfileView>
@@ -23,327 +33,155 @@ class _ProfileViewState extends State<ProfileView>
   @override
   void initState() {
     super.initState();
-    // Cargar perfil después de que se construya el widget
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().fetchProfile();
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => context.read<ProfileViewModel>().fetchProfile(),
+    );
   }
 
   Future<void> _logout() async {
-    try {
-      final authVM = context.read<AuthViewModel>();
-      final profileVM = context.read<ProfileViewModel>();
-
-      await authVM.logout();
-      profileVM.clearProfile();
-
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const LoginView()),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      _showSnackBar("Error al cerrar sesión", isError: true);
+    final auth = context.read<AuthViewModel>();
+    await auth.logout();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginView()),
+        (_) => false,
+      );
     }
-  }
-
-  Future<void> _refreshProfile() async {
-    await context.read<ProfileViewModel>().fetchProfile();
-  }
-
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: Duration(seconds: isError ? 4 : 2),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Importante para AutomaticKeepAliveClientMixin
+    super.build(context);
 
-    return WillPopScope(
-      onWillPop: () async {
-        await _logout();
-        return false;
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Mi Perfil"),
-          elevation: 0,
-          automaticallyImplyLeading: false,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () {
-                final profile = context.read<ProfileViewModel>().profile;
-                if (profile != null) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => RegisterFormWizard(profile: profile),
-                    ),
-                  );
-                }
-              },
-              tooltip: 'Editar perfil',
-            ),
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _refreshProfile,
-              tooltip: 'Actualizar perfil',
-            ),
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: _logout,
-              tooltip: 'Cerrar sesión',
-            ),
-          ],
-        ),
-        body: Consumer<ProfileViewModel>(
-          builder: (context, vm, child) {
-            if (vm.isLoading) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text("Cargando perfil..."),
-                  ],
-                ),
-              );
-            }
+    return Scaffold(
+      body: Consumer<ProfileViewModel>(
+        builder: (context, vm, _) {
+          final cs = Theme.of(context).colorScheme;
 
-            if (vm.errorMessage != null) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red[300],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      vm.errorMessage!,
-                      style: const TextStyle(fontSize: 16),
+          /// -------- estados de carga / error ----------
+          if (vm.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (vm.errorMessage != null) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline, size: 56, color: Colors.red),
+                  const SizedBox(height: AppSpacing.m),
+                  Text(vm.errorMessage!,
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _refreshProfile,
-                      child: const Text("Reintentar"),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            if (vm.profile == null) {
-              return const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.person_off,
-                      size: 64,
-                      color: Colors.grey,
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      "No se pudo cargar el perfil",
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            return RefreshIndicator(
-              onRefresh: _refreshProfile,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header del perfil
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue, Colors.blue.shade300],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        children: [
-                          CircleAvatar(
-                            radius: 40,
-                            backgroundColor: Colors.white,
-                            child: Text(
-                              vm.profile!.firstName.isNotEmpty
-                                  ? vm.profile!.firstName[0].toUpperCase()
-                                  : "U",
-                              style: const TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blue,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            "${vm.profile!.firstName} ${vm.profile!.lastName}",
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            vm.profile!.email,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Información del perfil
-                    const Text(
-                      "Información Personal",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    _buildInfoCard(
-                      icon: Icons.person,
-                      title: "Nombre Completo",
-                      value: "${vm.profile!.firstName} ${vm.profile!.lastName}",
-                    ),
-
-                    _buildInfoCard(
-                      icon: Icons.email,
-                      title: "Email",
-                      value: vm.profile!.email,
-                    ),
-
-                    _buildInfoCard(
-                      icon: Icons.location_city,
-                      title: "Ciudad",
-                      value: vm.profile!.city.isNotEmpty
-                          ? vm.profile!.city
-                          : "No especificada",
-                    ),
-
-                    _buildInfoCard(
-                      icon: Icons.flag,
-                      title: "País",
-                      value: vm.profile!.country.isNotEmpty
-                          ? vm.profile!.country
-                          : "No especificado",
-                    ),
-
-                    ListTile(
-                      leading: const Icon(Icons.visibility),
-                      title: const Text("Mis visitas agendadas"),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const MyVisitsView()),
-                        );
-                      },
-                    ),
-
-                    ListTile(
-                      leading: const Icon(Icons.visibility),
-                      title: const Text("Visitas solicitadas"),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const OwnerVisitsView()),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    const SizedBox(height: 32),
-
-                    // Botón de logout
-                  ],
-                ),
+                      style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: AppSpacing.l),
+                  FilledButton(
+                    onPressed: vm.fetchProfile,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
               ),
             );
-          },
-        ),
-      ),
-    );
-  }
+          }
+          if (vm.profile == null) {
+            return const Center(child: Text('Sin datos de perfil'));
+          }
 
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required String value,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.blue, size: 24),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
+          // --- ViewModels auxiliares para contadores ──────────
+          final favCount =
+              context.watch<FavoriteViewModel>().favoriteIds.length;
+          final myPropsCount =
+              context.watch<PropertyViewModel>().myProperties.length;
+          final visitsCount = context
+              .watch<VisitViewModel>()
+              .myVisits
+              .length; // ajusta si varía
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              /// ---------- Encabezado ----------
+              ProfileHeaderSliver(
+                profile: vm.profile!,
+                onEdit: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => RegisterFormWizard(profile: vm.profile!),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black, /// MODIFICACION DE LA LETRA BLANCA QUE NO SE LEIA
+              ),
+
+              /// ---------- Quick-stats ----------
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxl, vertical: AppSpacing.l),
+                  child: QuickStatsRow(
+                    favourites: favCount,
+                    myProperties: myPropsCount,
+                    visits: visitsCount,
+                    onTapFav: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const FavHistoryView()),
+                    ),
+                    onTapProps: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const MyPropertiesListView()),
+                    ),
+                    onTapVisits: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const MyVisitsView()),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+
+              /// ---------- Info personal ----------
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xxl, vertical: AppSpacing.l),
+                  child: PersonalInfoSection(profile: vm.profile!),
+                ),
+              ),
+
+              /// ---------- Lista de acciones ----------
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+                  child: ActionTilesSection(
+                    onOwnerVisits: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const OwnerVisitsView()),
+                    ),
+                  ),
+                ),
+              ),
+
+              /// ---------- Logout ----------
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: cs.error,
+                        side: BorderSide(color: cs.error),
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      icon: const Icon(Icons.logout),
+                      label: const Text('Cerrar sesión'),
+                      onPressed: _logout,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
