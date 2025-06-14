@@ -38,7 +38,7 @@ class _VisitBookingViewState extends State<VisitBookingView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Agendar Visita",
+          "Agendar Tour",
           style: TextStyle(fontSize: 20),
         ),
       ),

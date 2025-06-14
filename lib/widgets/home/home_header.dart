@@ -28,7 +28,7 @@ class HomeHeader extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xxl,
-              AppSpacing.xxxl + 15,
+              AppSpacing.xxxl,
               AppSpacing.xxl,
               AppSpacing.l,
             ),
@@ -46,9 +46,7 @@ class HomeHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.s),
                 Text(
-                  'Descubre las mejores propiedades del mercado\n'
-                  'y vive una experiencia única. ¡Tu nuevo hogar\n'
-                  'te está esperando!',
+                  'Descubre las mejores propiedades del mercado y vive una experiencia única.',
                   style: tt.bodyLarge?.copyWith(
                     color: cs.onSurface.withValues(alpha: .7),
                   ),
