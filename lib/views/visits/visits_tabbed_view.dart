@@ -178,6 +178,7 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: SizedBox(
+                                  height: _segment == 0 ? 140 : 190,
                                   child: Row(
                                     children: [
                                       ClipRRect(
@@ -190,6 +191,8 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                             ? Image.network(
                                                 property!.photos.first,
                                                 width: 120,
+                                                height:
+                                                    _segment == 0 ? 140 : 190,
                                                 fit: BoxFit.cover,
                                               )
                                             : Container(
@@ -250,7 +253,8 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                                   visit.contactEmail,
                                                   style: const TextStyle(
                                                       fontSize: 13),
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                               const SizedBox(height: 4),

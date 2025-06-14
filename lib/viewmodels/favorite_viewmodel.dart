@@ -10,7 +10,8 @@ class FavoriteViewModel extends ChangeNotifier {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   static const _ignoredKey = 'ignored_favs';
 
-  FavoriteViewModel({FavoriteService? service}) : _service = service ?? FavoriteService() {
+  FavoriteViewModel({FavoriteService? service})
+      : _service = service ?? FavoriteService() {
     _loadIgnored();
   }
 
@@ -34,7 +35,8 @@ class FavoriteViewModel extends ChangeNotifier {
   }
 
   Future<void> _persistIgnored() async {
-    await _storage.write(key: _ignoredKey, value: jsonEncode(_ignoredIds.toList()));
+    await _storage.write(
+        key: _ignoredKey, value: jsonEncode(_ignoredIds.toList()));
   }
 
   Future<void> fetchFavorites() async {
@@ -52,30 +54,35 @@ class FavoriteViewModel extends ChangeNotifier {
   }
 
   Future<void> toggleFavorite(String propertyId) async {
-    // Guardar estado actual para poder revertir en caso de error
     final bool wasAlreadyFavorite = _favoriteIds.contains(propertyId);
-    
-    // Optimistic update - actualizar UI inmediatamente
+
+    // Optimistic update
     if (wasAlreadyFavorite) {
       _favoriteIds.remove(propertyId);
-      _ignoredIds.add(propertyId); // mantener oculto
+      _ignoredIds.add(propertyId);
       await _persistIgnored();
     } else {
       _favoriteIds.add(propertyId);
-      _ignoredIds.remove(propertyId); // ya no ignorar
+      _ignoredIds.remove(propertyId);
       await _persistIgnored();
     }
     notifyListeners();
 
     try {
-      // En esta API, el mismo endpoint POST se usa para agregar y quitar
-      final bool success = await _service.addFavorite(propertyId);
-      
+      bool success;
+      if (wasAlreadyFavorite) {
+        // ✅ Usar DELETE si ya era favorito
+        success = await _service.removeFavorite(propertyId);
+      } else {
+        // ➕ Usar POST si no era favorito
+        success = await _service.addFavorite(propertyId);
+      }
+
       if (!success) {
         throw Exception('La operación no fue exitosa');
       }
-      
-      // Solo recargar cuando añadimos (para no re-mostrar eliminados)
+
+      // Actualiza solo cuando agregamos para reflejar correctamente cambios
       if (!wasAlreadyFavorite) {
         await Future.delayed(const Duration(milliseconds: 300));
         if (_state != FavoriteState.disposed) {
@@ -83,12 +90,15 @@ class FavoriteViewModel extends ChangeNotifier {
         }
       }
     } catch (e) {
-      // Revertir cambio optimista en caso de error
+      // Revertir cambio optimista
       if (wasAlreadyFavorite) {
         _favoriteIds.add(propertyId);
+        _ignoredIds.remove(propertyId);
       } else {
         _favoriteIds.remove(propertyId);
+        _ignoredIds.add(propertyId);
       }
+      await _persistIgnored();
       _errorMessage = e.toString();
       notifyListeners();
     }
@@ -103,4 +113,4 @@ class FavoriteViewModel extends ChangeNotifier {
     _state = FavoriteState.disposed;
     super.dispose();
   }
-} 
+}
