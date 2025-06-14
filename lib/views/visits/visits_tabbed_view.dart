@@ -282,25 +282,29 @@ class _AllVisitsViewState extends State<AllVisitsView> {
                                             ),
                                           ],
                                         ),
-                                      if (_segment == 1)
-                                        if (visit.status != "rechazada")
-                                          PopupMenuButton<String>(
-                                            onSelected: (v) =>
-                                                _changeStatus(visit.id, v),
-                                            itemBuilder: (_) => [
-                                              if (visit.status == "pendiente")
-                                                const PopupMenuItem(
-                                                    value: 'aceptada',
-                                                    child: Text('Aceptar')),
-                                              if (visit.status == "pendiente")
-                                                const PopupMenuItem(
-                                                    value: 'rechazada',
-                                                    child: Text('Rechazar')),
+                                      if (_segment == 1 &&
+                                          visit.status != "rechazada")
+                                        PopupMenuButton<String>(
+                                          onSelected: (v) =>
+                                              _changeStatus(visit.id, v),
+                                          itemBuilder: (_) => [
+                                            if (visit.status == "pendiente")
                                               const PopupMenuItem(
-                                                  value: 'cancelada',
-                                                  child: Text('Cancelar')),
-                                            ],
-                                          ),
+                                                value: 'aceptada',
+                                                child: Text('Aceptar'),
+                                              ),
+                                            if (visit.status == "pendiente")
+                                              const PopupMenuItem(
+                                                value: 'rechazada',
+                                                child: Text('Rechazar'),
+                                              ),
+                                            if (visit.status == "aceptada")
+                                              const PopupMenuItem(
+                                                value: 'cancelada',
+                                                child: Text('Cancelar'),
+                                              ),
+                                          ],
+                                        ),
                                     ],
                                   ),
                                 ),

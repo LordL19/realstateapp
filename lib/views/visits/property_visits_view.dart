@@ -122,7 +122,7 @@ class _PropertyVisitsViewState extends State<PropertyVisitsView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: SizedBox(
-                            height: 180,
+                            height: 190,
                             child: Row(
                               children: [
                                 ClipRRect(
@@ -133,12 +133,12 @@ class _PropertyVisitsViewState extends State<PropertyVisitsView> {
                                       ? Image.network(
                                           property!.photos.first,
                                           width: 120,
-                                          height: 180,
+                                          height: 190,
                                           fit: BoxFit.cover,
                                         )
                                       : Container(
                                           width: 120,
-                                          height: 180,
+                                          height: 190,
                                           color: Colors.grey.shade300,
                                           child: const Icon(
                                               Icons.image_not_supported),
@@ -184,6 +184,8 @@ class _PropertyVisitsViewState extends State<PropertyVisitsView> {
                                         ),
                                         Text(
                                           visit.contactEmail,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             fontSize: 13,
                                             fontStyle: FontStyle.italic,
@@ -208,15 +210,19 @@ class _PropertyVisitsViewState extends State<PropertyVisitsView> {
                                     itemBuilder: (_) => [
                                       if (visit.status == "pendiente")
                                         const PopupMenuItem(
-                                            value: 'aceptada',
-                                            child: Text('Aceptar')),
+                                          value: 'aceptada',
+                                          child: Text('Aceptar'),
+                                        ),
                                       if (visit.status == "pendiente")
                                         const PopupMenuItem(
-                                            value: 'rechazada',
-                                            child: Text('Rechazar')),
-                                      const PopupMenuItem(
+                                          value: 'rechazada',
+                                          child: Text('Rechazar'),
+                                        ),
+                                      if (visit.status == "aceptada")
+                                        const PopupMenuItem(
                                           value: 'cancelada',
-                                          child: Text('Cancelar')),
+                                          child: Text('Cancelar'),
+                                        ),
                                     ],
                                   ),
                               ],
