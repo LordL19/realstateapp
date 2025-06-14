@@ -8,7 +8,7 @@ import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart';
 import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 import 'package:realestate_app/viewmodels/favorite_viewmodel.dart';
 import 'package:realestate_app/views/properties/favorite_list_view.dart';
-import 'package:realestate_app/views/properties/property_list_view.dart';
+import 'package:realestate_app/views/properties/home_view.dart';
 import 'package:realestate_app/views/properties/my_properties_list_view.dart';
 import 'package:realestate_app/views/profile_view.dart';
 
@@ -44,7 +44,7 @@ class _MainTabViewContentState extends State<_MainTabViewContent>
   int _currentIndex = 0;
 
   final List<Widget> _pages = const [
-    PropertyListView(),
+    HomeView(),
     MyPropertiesListView(),
     FavHistoryView(),
     ProfileView(),

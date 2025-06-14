@@ -1,3 +1,5 @@
+// lib/views/properties/property_detail_view.dart
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -31,6 +33,7 @@ class PropertyDetailView extends StatefulWidget {
 
 class _PropertyDetailViewState extends State<PropertyDetailView> {
   late Future<String> _listedBy;
+  final _random = Random();
   static const LatLng _fallback = LatLng(-17.7833, -63.1821);
 
   @override
@@ -66,12 +69,12 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
     final tt = Theme.of(context).textTheme;
     final currency = NumberFormat.currency(locale: 'es_BO', symbol: '\$');
     final statusColor = _statusColor(p.status, context);
+    final viewers = _random.nextInt(10) + 1; // 1–10 personas
 
     final LatLng coords = (p.latitude != null && p.longitude != null)
         ? LatLng(p.latitude!, p.longitude!)
         : _fallback;
 
-    /* -------- placeholder de descripción si viene muy corta -------- */
     final desc = (p.description ?? '').trim().length < 50
         ? 'Esta propiedad ofrece un estilo de vida cómodo y contemporáneo, '
             'con espacios amplios y luminosos, acabados de primera calidad y una '
@@ -109,6 +112,7 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // Status + Price + Address
                           Row(
                             children: [
                               Container(
@@ -119,59 +123,46 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                   shape: BoxShape.circle,
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: AppSpacing.s),
                               Text(
-                                p.status[0].toUpperCase() +
-                                    p.status.substring(1),
+                                '${p.status[0].toUpperCase()}${p.status.substring(1)}',
                                 style: tt.bodyLarge?.copyWith(
-                                    color: statusColor,
-                                    fontWeight: FontWeight.w900),
+                                  color: statusColor,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.xs),
+                          const SizedBox(height: AppSpacing.s),
                           Text(
                             currency.format(p.price),
                             style: GoogleFonts.golosText(
-                              // <-- tu fuente elegida
                               textStyle: tt.headlineLarge?.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: cs.primary,
                               ),
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.xs),
-
-                          /* estimado mensual */
-                          Text(
-                              'Est. ${(p.price / 1716).toStringAsFixed(0)} \$ / mes',
-                              style: tt.bodyMedium),
                           const SizedBox(height: AppSpacing.s),
-
-                          /* dirección (máx 2 líneas) */
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  '${p.address}',
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: tt.bodyMedium,
-                                ),
-                              ),
-                            ],
+                          Text('Est. ${(p.price / 1716).round()} \$ / mes',
+                              style: tt.bodyMedium),
+                          const SizedBox(height: AppSpacing.m),
+                          Text(
+                            p.address ?? '',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: tt.bodyMedium,
                           ),
                           const SizedBox(height: AppSpacing.m),
 
-                          /* botón pre-aprobación */
+                          // Nuevo texto de viewers
                           OutlinedButton(
                             onPressed: () {},
-                            child: const Text('Obtén pre-aprobación'),
+                            child: Text('$viewers personas viendo ahora mismo'),
                           ),
                           const SizedBox(height: AppSpacing.xl),
 
-                          /* quick facts */
+                          // Quick facts
                           Wrap(
                             spacing: AppSpacing.s,
                             runSpacing: AppSpacing.s,
@@ -180,10 +171,10 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                   icon: Icons.bed, label: '${p.bedrooms} hab.'),
                               QuickFactChip(
                                   icon: Icons.square_foot,
-                                  label: '${p.builtArea} m² construidos'),
+                                  label: '${p.builtArea} m² const.'),
                               QuickFactChip(
                                   icon: Icons.straighten,
-                                  label: '${p.area} m² totales'),
+                                  label: '${p.area} m² tot.'),
                               if (p.propertyType != null)
                                 QuickFactChip(
                                     icon: Icons.home_work_outlined,
@@ -193,10 +184,12 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                           const SizedBox(height: AppSpacing.l),
                           Divider(height: 1, thickness: .7, color: cs.outline),
                           const SizedBox(height: AppSpacing.l),
+
+                          // Descripción
                           Text(desc, style: tt.bodyLarge),
                           const SizedBox(height: AppSpacing.xl),
 
-                          /* mapa sin encabezado */
+                          // Mapa
                           StaticMapPreview(latLng: coords),
                         ],
                       ),
@@ -215,30 +208,7 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                     padding: const EdgeInsets.all(AppSpacing.l),
                     child: Row(
                       children: [
-                        Expanded(
-                          child: widget.isOwner
-                              ? const ElevatedButton(
-                                  onPressed: null, // Deshabilitado
-                                  child: Text('Ver visitas'),
-                                )
-                              : ElevatedButton(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => ChangeNotifierProvider(
-                                          create: (_) => VisitViewModel(),
-                                          child: VisitBookingView(
-                                            propertyId: p.idProperty,
-                                            ownerId: p.idUser,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                  child: const Text('Agendar tour'),
-                                ),
-                        ),
-                        const SizedBox(width: AppSpacing.m),
+                        // Solo "Agendar tour" para no-owners, editar para owners
                         Expanded(
                           child: widget.isOwner
                               ? OutlinedButton(
@@ -256,9 +226,21 @@ class _PropertyDetailViewState extends State<PropertyDetailView> {
                                   },
                                   child: const Text('Editar propiedad'),
                                 )
-                              : const OutlinedButton(
-                                  onPressed: null, // Sin función por ahora
-                                  child: Text('Contactar agente'),
+                              : ElevatedButton(
+                                  onPressed: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => ChangeNotifierProvider(
+                                          create: (_) => VisitViewModel(),
+                                          child: VisitBookingView(
+                                            propertyId: p.idProperty,
+                                            ownerId: p.idUser,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  child: const Text('Agendar tour'),
                                 ),
                         ),
                       ],
