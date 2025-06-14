@@ -15,13 +15,18 @@ class RecommendationGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width;
+    final narrow = width < 360;
+    final cols = narrow ? 1 : 2;
+    final double extent = narrow ? 340 : 320;
+
     return GridView.builder(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisExtent: 320,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: cols,
+        mainAxisExtent: extent,
         crossAxisSpacing: AppSpacing.m,
         mainAxisSpacing: AppSpacing.m,
       ),
