@@ -40,6 +40,12 @@ class GalleryTile extends StatelessWidget {
             ),
           ),
         ),
+        Positioned.fill(
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(onTap: onTap),
+          ),
+        ),
         if (item.remoteUrl == null && !item.error) const LoaderOverlay(),
         if (item.error) const ErrorOverlay(),
         Positioned(
@@ -51,12 +57,6 @@ class GalleryTile extends StatelessWidget {
               icon: const Icon(Icons.close, size: 16),
               onPressed: onRemove,
             ),
-          ),
-        ),
-        Positioned.fill(
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(onTap: onTap),
           ),
         ),
       ],
