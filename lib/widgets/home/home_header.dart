@@ -10,10 +10,9 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final isWide = MediaQuery.of(context).size.width >= 700;
-    final scale = MediaQuery.of(context).textScaleFactor;
-    // Para pantallas angostas, si la escala de texto es grande, damos más altura.
-    final narrowRatio = (scale > 1.1) ? 3 / 2 : 4 / 3; // 1.5 ó 1.33
+    final isWide = MediaQuery.of(context).size.width >= 500;
+    // Usamos un ratio fijo más compacto en móvil (1.25:1)
+    final narrowRatio = isWide ? 3 / 1 : 5 / 3;
 
     return AspectRatio(
       aspectRatio: isWide ? 2.8 / 1 : narrowRatio,
