@@ -3,6 +3,7 @@ import 'package:graphql_flutter/graphql_flutter.dart';
 import '../models/create_property_input.dart';
 import '../models/property.dart';
 import '../services/property_service.dart';
+import 'package:collection/collection.dart';
 
 enum PropertyState { initial, loading, loaded, error }
 
@@ -394,6 +395,11 @@ class PropertyViewModel extends ChangeNotifier {
       ..sort((a, b) =>
           (a.price - avgPrice).abs().compareTo((b.price - avgPrice).abs()));
     return sorted.take(6).toList();
+  }
+
+  Property? getPropertyById(String id) {
+    return _properties.firstWhereOrNull((p) => p.idProperty == id) ??
+        _myProperties.firstWhereOrNull((p) => p.idProperty == id);
   }
 
   void resetFormState() {

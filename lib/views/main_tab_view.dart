@@ -10,6 +10,7 @@ import 'package:realestate_app/views/properties/my_properties_list_view.dart';
 import 'package:realestate_app/views/profile_view.dart';
 import 'package:realestate_app/viewmodels/property_viewmodel.dart';
 import 'package:realestate_app/viewmodels/favorite_viewmodel.dart';
+import 'package:realestate_app/views/visits/visits_tabbed_view.dart';
 
 class MainTabView extends StatelessWidget {
   const MainTabView({super.key});
@@ -35,6 +36,7 @@ class _MainTabViewContentState extends State<_MainTabViewContent>
     HomeView(),
     MyPropertiesListView(),
     FavHistoryView(),
+    AllVisitsView(),
     ProfileView(),
   ];
 
@@ -127,7 +129,9 @@ class _MainTabViewContentState extends State<_MainTabViewContent>
                 _buildTabIcon(Icons.home, 0, activeColor, unselectedColor),
                 _buildTabIcon(Icons.business, 1, activeColor, unselectedColor),
                 _buildTabIcon(Icons.favorite, 2, activeColor, unselectedColor),
-                _buildTabIcon(Icons.person, 3, activeColor, unselectedColor),
+                _buildTabIcon(
+                    Icons.calendar_month, 3, activeColor, unselectedColor),
+                _buildTabIcon(Icons.person, 4, activeColor, unselectedColor),
               ],
             ),
           ],

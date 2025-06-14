@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:realestate_app/viewmodels/property_viewmodel.dart';
+import 'package:realestate_app/views/properties/property_detail_view.dart';
 import '../../viewmodels/visits_viewmodel.dart';
 
 class MyVisitsView extends StatefulWidget {
@@ -16,7 +18,11 @@ class _MyVisitsViewState extends State<MyVisitsView> {
   @override
   void initState() {
     super.initState();
-    Provider.of<VisitViewModel>(context, listen: false).fetchMyVisits();
+    final vm = Provider.of<VisitViewModel>(context, listen: false);
+    final propertyVM = Provider.of<PropertyViewModel>(context, listen: false);
+
+    vm.fetchMyVisits();
+    propertyVM.fetchProperties();
   }
 
   Future<void> _confirmCancel(BuildContext context, String id) async {
@@ -45,10 +51,30 @@ class _MyVisitsViewState extends State<MyVisitsView> {
     }
   }
 
+  Color _buildStatusChip(String status) {
+    Color sColor;
+    switch (status) {
+      case 'aceptada':
+        sColor = Colors.green;
+        break;
+      case 'rechazada':
+      case 'cancelada':
+        sColor = Colors.red;
+        break;
+      case 'pendiente':
+        sColor = Colors.orange;
+        break;
+      default:
+        sColor = Colors.grey;
+    }
+
+    return sColor;
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = Provider.of<VisitViewModel>(context);
-    final dateFormat = DateFormat('dd/MM/yyyy – HH:mm');
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm');
 
     final visits = vm.myVisits
         .where((visit) =>
@@ -65,7 +91,7 @@ class _MyVisitsViewState extends State<MyVisitsView> {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedStatus,
-                icon: const Icon(Icons.filter_list, color: Colors.white),
+                icon: const Icon(Icons.filter_list),
                 dropdownColor: Colors.white,
                 style: const TextStyle(color: Colors.black),
                 onChanged: (value) {
@@ -99,42 +125,142 @@ class _MyVisitsViewState extends State<MyVisitsView> {
                   : RefreshIndicator(
                       onRefresh: vm.fetchMyVisits,
                       child: ListView.builder(
-                        itemCount: visits.length,
-                        itemBuilder: (context, index) {
-                          final visit = visits[index];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 8),
-                            child: ListTile(
-                              leading: const Icon(Icons.house_outlined),
-                              title: Text(
-                                visit.propertyTitle ?? 'Propiedad sin título',
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          itemCount: visits.length,
+                          itemBuilder: (context, index) {
+                            final visit = visits[index];
+                            final property = Provider.of<PropertyViewModel>(
+                                    context,
+                                    listen: false)
+                                .getPropertyById(visit.propertyId);
+
+                            return GestureDetector(
+                              onTap: () {
+                                if (property != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => PropertyDetailView(
+                                        property: property,
+                                        isOwner: false,
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text(
+                                            'No se encontró la propiedad')),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  children: [
+                                    // --- Imagen ---
+                                    ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(16),
+                                        bottomLeft: Radius.circular(16),
+                                      ),
+                                      child: property?.photos.isNotEmpty == true
+                                          ? Image.network(
+                                              property!.photos.first,
+                                              width: 120,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Container(
+                                              width: 120,
+                                              height: 120,
+                                              color: Colors.grey.shade300,
+                                              child: const Icon(Icons.image,
+                                                  size: 40, color: Colors.grey),
+                                            ),
+                                    ),
+
+                                    // --- Contenido ---
+                                    Expanded(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Estado + Precio
+                                            Text(
+                                              property?.title ?? 'Propiedad',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            // Título + ubicación
+                                            Text(
+                                              '${property?.propertyType ?? 'Propiedad'} · ${property?.city ?? ''}',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            Text(
+                                              property?.address ?? '',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey.shade600,
+                                              ),
+                                            ),
+
+                                            const SizedBox(height: 18),
+
+                                            // Fecha
+                                            Text(
+                                              'Visita: ${dateFormat.format(visit.requestedDateTime)}',
+                                              style:
+                                                  const TextStyle(fontSize: 14),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              visit.status.toUpperCase(),
+                                              style: TextStyle(
+                                                  color: _buildStatusChip(
+                                                      visit.status),
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+
+                                    // --- Menú contextual ---
+                                    if (visit.status == 'pendiente')
+                                      PopupMenuButton<String>(
+                                        onSelected: (value) {
+                                          if (value == 'cancelar') {
+                                            _confirmCancel(context, visit.id);
+                                          }
+                                        },
+                                        itemBuilder: (context) => const [
+                                          PopupMenuItem(
+                                            value: 'cancelar',
+                                            child: Text('Cancelar'),
+                                          ),
+                                        ],
+                                        icon: const Icon(Icons.more_vert),
+                                      ),
+                                  ],
+                                ),
                               ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Fecha: ${dateFormat.format(visit.requestedDateTime)}',
-                                  ),
-                                  Text('Estado: ${visit.status}'),
-                                ],
-                              ),
-                              trailing: visit.status == 'pendiente'
-                                  ? IconButton(
-                                      icon: const Icon(Icons.cancel,
-                                          color: Colors.red),
-                                      tooltip: 'Cancelar visita',
-                                      onPressed: () =>
-                                          _confirmCancel(context, visit.id),
-                                    )
-                                  : null,
-                            ),
-                          );
-                        },
-                      ),
+                            );
+                          }),
                     ),
     );
   }
